@@ -23,13 +23,13 @@ public class ClienteController {
     }
 
     @GetMapping
-    @Operation(summary = "Obtener todos los clientes", description = "Lista todos los clientes")
+    @Operation(summary = "Listar clientes", description = "Obtiene todos los clientes activos")
     public List<Cliente> listarTodos() {
         return clienteService.listarClientes();
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Obtener cliente por ID", description = "Busca un cliente usando su UUID")
+    @Operation(summary = "Obtener cliente por ID", description = "Obtiene un cliente por su ID")
     public ResponseEntity<Cliente> obtenerPorId(@PathVariable UUID id) {
         return clienteService.obtenerClientePorId(id)
                 .map(ResponseEntity::ok)
@@ -37,20 +37,20 @@ public class ClienteController {
     }
 
     @PostMapping
-    @Operation(summary = "Crear cliente", description = "Registra un nuevo cliente en el sistema")
+    @Operation(summary = "Crear cliente", description = "Crea un nuevo cliente")
     public ResponseEntity<Cliente> crear(@RequestBody Cliente cliente) {
         return ResponseEntity.ok(clienteService.crearCliente(cliente));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Actualizar cliente", description = "Actualiza un cliente según su UUID")
+    @Operation(summary = "Actualizar cliente", description = "Actualiza un cliente existente")
     public ResponseEntity<Cliente> actualizar(@PathVariable UUID id, @RequestBody Cliente cliente) {
         Cliente actualizado = clienteService.actualizarCliente(id, cliente);
         return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar cliente", description = "Elimina un cliente según su UUID")
+    @Operation(summary = "Eliminar cliente", description = "Elimina un cliente (lógicamente)")
     public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
         clienteService.eliminarCliente(id);
         return ResponseEntity.noContent().build();

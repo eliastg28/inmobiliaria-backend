@@ -9,19 +9,23 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "usuarios", schema = "core")
+@Table(name = "tipos_lote", schema = "catalogo")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Usuario {
+public class TipoLote {
 
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "usuario_id", updatable = false, nullable = false)
-    private UUID usuario_id;
+    @Column(name = "tipo_lote_id", updatable = false, nullable = false)
+    private UUID tipo_lote_id;
 
-    private String username;
 
-    private String password;
+    private String nombre;
+
+    private String descripcion;
+
+    @Column(nullable = false)
+    private Boolean activo = true;
 }

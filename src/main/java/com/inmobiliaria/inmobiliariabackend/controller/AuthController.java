@@ -50,7 +50,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    @Operation(summary = "Registrar nuevo usuario", description = "Crea un nuevo usuario con nombre de usuario y contraseña")
+    @Operation(summary = "Crear usuario", description = "Crea un nuevo usuario")
     public ResponseEntity<?> register(@RequestBody RegistroUsuarioDTO dto) {
         try {
             Usuario creado = userDetailsService.registrarUsuario(dto.getUsername(), dto.getPassword());
