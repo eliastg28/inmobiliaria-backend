@@ -31,22 +31,26 @@ public class DistritoService {
     }
 
     public Distrito crear(Distrito distrito) {
+        distrito.setActivo(true);
         return distritoRepository.save(distrito);
     }
 
-    public Distrito actualizar(UUID id, Distrito datos) {
+    public Distrito actualizar(UUID id, Distrito distrito) {
         return distritoRepository.findById(id)
-                .map(existente -> {
-                    existente.setNombre(datos.getNombre());
-                    existente.setDescripcion(datos.getDescripcion());
-                    return distritoRepository.save(existente);
-                }).orElse(null);
+                .map(d -> {
+                    d.setNombre(distrito.getNombre());
+                    d.setDescripcion(distrito.getDescripcion());
+                    d.setProvincia(distrito.getProvincia());
+                    return distritoRepository.save(d);
+                })
+                .orElse(null);
     }
 
     public void eliminar(UUID id) {
-        distritoRepository.findById(id).ifPresent(distrito -> {
-            distrito.setActivo(false);
-            distritoRepository.save(distrito);
-        });
+        distritoRepository.findById(id)
+                .ifPresent(d -> {
+                    d.setActivo(false);
+                    distritoRepository.save(d);
+                });
     }
 }

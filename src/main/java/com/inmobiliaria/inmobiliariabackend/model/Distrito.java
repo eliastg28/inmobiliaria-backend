@@ -27,4 +27,8 @@ public class Distrito {
 
     @Column(nullable = false)
     private Boolean activo = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "provincia_id", nullable = false)
+    private Provincia provincia;
 }

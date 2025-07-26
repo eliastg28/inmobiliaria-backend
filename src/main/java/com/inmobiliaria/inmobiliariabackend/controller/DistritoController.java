@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "Distritos", description = "Gestión de los distritos registrados en el sistema")
+@Tag(name = "Distritos", description = "Gestión de distritos geográficos")
 @RestController
 @RequestMapping("/api/distritos")
 @CrossOrigin(origins = "*")
@@ -45,8 +45,8 @@ public class DistritoController {
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar distrito", description = "Actualiza un distrito existente")
     public ResponseEntity<Distrito> actualizar(@PathVariable UUID id, @RequestBody Distrito distrito) {
-        Distrito actualizado = distritoService.actualizar(id, distrito);
-        return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+        Distrito actualizada = distritoService.actualizar(id, distrito);
+        return actualizada != null ? ResponseEntity.ok(actualizada) : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
