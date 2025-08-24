@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "Estados de Lote", description = "Gestión de los estados en los que puede estar un lote (disponible, reservado, vendido, etc.)")
+@Tag(name = "Estados de Lote", description = "Gestión de los estados en los que puede estar un lote")
 @RestController
 @RequestMapping("/api/estados-lote")
 @CrossOrigin(origins = "*")

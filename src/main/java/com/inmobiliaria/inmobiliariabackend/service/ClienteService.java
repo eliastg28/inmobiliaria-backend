@@ -31,22 +31,28 @@ public class ClienteService {
     }
 
     public Cliente crearCliente(Cliente cliente) {
+        // Fecha de registro automática si no se envía
+        if (cliente.getFechaRegistro() == null) {
+            cliente.setFechaRegistro(java.time.LocalDate.now());
+        }
         return clienteRepository.save(cliente);
     }
 
     public Cliente actualizarCliente(UUID id, Cliente nuevo) {
         return clienteRepository.findById(id)
                 .map(cliente -> {
-                    cliente.setNombres(nuevo.getNombres());
-                    cliente.setApellidos(nuevo.getApellidos());
+                    cliente.setPrimerNombre(nuevo.getPrimerNombre());
+                    cliente.setSegundoNombre(nuevo.getSegundoNombre());
+                    cliente.setApellidoPaterno(nuevo.getApellidoPaterno());
+                    cliente.setApellidoMaterno(nuevo.getApellidoMaterno());
+                    cliente.setTipoDocumento(nuevo.getTipoDocumento());
+                    cliente.setNumeroDocumento(nuevo.getNumeroDocumento());
                     cliente.setCorreo(nuevo.getCorreo());
                     cliente.setTelefono(nuevo.getTelefono());
-                    cliente.setEstado(nuevo.getEstado());
                     cliente.setVisitasRealizadas(nuevo.getVisitasRealizadas());
                     cliente.setLlamadasNoAtendidas(nuevo.getLlamadasNoAtendidas());
                     cliente.setDiasDesdeUltimaVisita(nuevo.getDiasDesdeUltimaVisita());
                     cliente.setIngresosMensuales(nuevo.getIngresosMensuales());
-                    cliente.setTipoLote(nuevo.getTipoLote());
                     cliente.setFechaRegistro(nuevo.getFechaRegistro());
                     return clienteRepository.save(cliente);
                 })

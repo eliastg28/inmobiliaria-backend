@@ -9,7 +9,7 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tipos_lote", schema = "catalogo")
+@Table(name = "tiposLote", schema = "catalogo")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,8 +18,8 @@ public class TipoLote {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "tipo_lote_id", updatable = false, nullable = false)
-    private UUID tipo_lote_id;
+    @Column(name = "tipoLoteId", updatable = false, nullable = false)
+    private UUID tipoLoteId;
 
 
     private String nombre;

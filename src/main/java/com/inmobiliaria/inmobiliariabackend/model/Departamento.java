@@ -18,8 +18,8 @@ public class Departamento {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "departamento_id", updatable = false, nullable = false)
-    private UUID departamento_id;
+    @Column(name = "departamentoId", updatable = false, nullable = false)
+    private UUID departamentoId;
 
     private String nombre;
 

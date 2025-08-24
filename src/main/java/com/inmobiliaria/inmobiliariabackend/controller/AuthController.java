@@ -1,5 +1,6 @@
 package com.inmobiliaria.inmobiliariabackend.controller;
 
+import com.inmobiliaria.inmobiliariabackend.dto.LoginUserDTO;
 import com.inmobiliaria.inmobiliariabackend.dto.RegistroUsuarioDTO;
 import com.inmobiliaria.inmobiliariabackend.model.Usuario;
 import com.inmobiliaria.inmobiliariabackend.security.JwtUtil;
@@ -33,9 +34,9 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Iniciar sesión", description = "Autentica al usuario y devuelve un JWT si las credenciales son válidas")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
+    public ResponseEntity<?> login(@RequestBody LoginUserDTO dto) {
+        String username = dto.getUsername();
+        String password = dto.getPassword();
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
@@ -50,10 +51,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    @Operation(summary = "Crear usuario", description = "Crea un nuevo usuario")
+    @Operation(summary = "Crear usuario", description = "Crea un nuevo usuario con roles asignados")
     public ResponseEntity<?> register(@RequestBody RegistroUsuarioDTO dto) {
         try {
-            Usuario creado = userDetailsService.registrarUsuario(dto.getUsername(), dto.getPassword());
+            Usuario creado = userDetailsService.registrarUsuario(dto.getUsername(), dto.getPassword(), dto.getRoles());
             return ResponseEntity.ok("Usuario creado con éxito: " + creado.getUsername());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

@@ -18,8 +18,8 @@ public class Distrito {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "distrito_id", updatable = false, nullable = false)
-    private UUID distrito_id;
+    @Column(name = "distritoId", updatable = false, nullable = false)
+    private UUID distritoId;
 
     private String nombre;
 
@@ -29,6 +29,6 @@ public class Distrito {
     private Boolean activo = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "provincia_id", nullable = false)
+    @JoinColumn(name = "provinciaId", nullable = false)
     private Provincia provincia;
 }

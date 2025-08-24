@@ -18,8 +18,8 @@ public class Provincia {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "provincia_id", updatable = false, nullable = false)
-    private UUID provincia_id;
+    @Column(name = "provinciaId", updatable = false, nullable = false)
+    private UUID provinciaId;
 
     private String nombre;
 
@@ -29,6 +29,6 @@ public class Provincia {
     private Boolean activo = true;
 
     @ManyToOne
-    @JoinColumn(name = "departamento_id", nullable = false)
+    @JoinColumn(name = "departamentoId", nullable = false)
     private Departamento departamento;
 }

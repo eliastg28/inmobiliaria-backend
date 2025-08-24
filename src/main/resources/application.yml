@@ -21,3 +21,9 @@ spring:
 springdoc:
   api-docs:
     path: /api-docs
+
+# Configuración del seed
+app:
+  seed:
+    enabled: false   # true para ejecutar el seed, false para no ejecutarlo
+    reset: false    # true para borrar datos antes de insertar

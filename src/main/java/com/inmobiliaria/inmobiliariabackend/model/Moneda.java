@@ -18,8 +18,8 @@ public class Moneda {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "moneda_id", updatable = false, nullable = false)
-    private UUID moneda_id;
+    @Column(name = "monedaId", updatable = false, nullable = false)
+    private UUID monedaId;
 
     private String nombre;
 

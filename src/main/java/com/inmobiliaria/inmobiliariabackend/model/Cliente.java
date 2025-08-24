@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -19,20 +22,43 @@ public class Cliente {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "cliente_id", updatable = false, nullable = false)
-    private UUID cliente_id;
+    @Column(name = "clienteId", updatable = false, nullable = false)
+    private UUID clienteId;
 
-    private String nombres;
-    private String apellidos;
+    @NotBlank
+    @Size(max = 50)
+    private String primerNombre;
+
+    @Size(max = 50)
+    private String segundoNombre;
+
+    @NotBlank
+    @Size(max = 50)
+    private String apellidoPaterno;
+
+    @NotBlank
+    @Size(max = 50)
+    private String apellidoMaterno;
+
+    @ManyToOne
+    @JoinColumn(name = "tipoDocumentoId", nullable = false)
+    private TipoDocumento tipoDocumento;
+
+    @NotBlank
+    @Size(max = 20)
+    private String numeroDocumento;
+
+    @Email
+    @Size(max = 100)
     private String correo;
+
+    @Size(max = 20)
     private String telefono;
-    private String estado;
 
     private Integer visitasRealizadas;
     private Integer llamadasNoAtendidas;
     private Integer diasDesdeUltimaVisita;
     private Double ingresosMensuales;
-    private String tipoLote;
 
     private LocalDate fechaRegistro;
 
