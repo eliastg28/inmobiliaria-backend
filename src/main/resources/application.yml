@@ -27,3 +27,6 @@ app:
   seed:
     enabled: false   # true para ejecutar el seed, false para no ejecutarlo
     reset: false    # true para borrar datos antes de insertar
+
+frontend:
+  url: http://localhost:5173
