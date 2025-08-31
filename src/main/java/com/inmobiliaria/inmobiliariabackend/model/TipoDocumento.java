@@ -2,18 +2,20 @@ package com.inmobiliaria.inmobiliariabackend.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "tiposDocumento", schema = "catalogo")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TipoDocumento {
+public class TipoDocumento extends Auditable {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -25,6 +27,4 @@ public class TipoDocumento {
 
     private String descripcion;
 
-    @Column(nullable = false)
-    private Boolean activo = true;
 }

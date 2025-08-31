@@ -1,12 +1,15 @@
 package com.inmobiliaria.inmobiliariabackend.controller;
 
+import com.inmobiliaria.inmobiliariabackend.dto.TipoDocumentoDTO;
 import com.inmobiliaria.inmobiliariabackend.model.TipoDocumento;
 import com.inmobiliaria.inmobiliariabackend.service.TipoDocumentoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,8 +27,8 @@ public class TipoDocumentoController {
 
     @GetMapping
     @Operation(summary = "Listar tipos de documento", description = "Obtiene todos los tipos de documento activos")
-    public List<TipoDocumento> listar() {
-        return tipoDocumentoService.listar();
+    public ResponseEntity<List<TipoDocumento>> listar() {
+        return ResponseEntity.ok(tipoDocumentoService.listar());
     }
 
     @GetMapping("/{id}")
@@ -38,15 +41,26 @@ public class TipoDocumentoController {
 
     @PostMapping
     @Operation(summary = "Crear tipo de documento", description = "Crea un nuevo tipo de documento")
-    public ResponseEntity<TipoDocumento> crear(@RequestBody TipoDocumento tipo) {
-        return ResponseEntity.ok(tipoDocumentoService.crear(tipo));
+    public ResponseEntity<?> crear(@RequestBody TipoDocumentoDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            TipoDocumento creado = tipoDocumentoService.crear(dto);
+            return ResponseEntity
+                    .created(URI.create("/api/tipos-documento/" + creado.getTipoDocumentoId()))
+                    .body(creado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar tipo de documento", description = "Actualiza un tipo de documento existente")
-    public ResponseEntity<TipoDocumento> actualizar(@PathVariable UUID id, @RequestBody TipoDocumento tipo) {
-        TipoDocumento actualizado = tipoDocumentoService.actualizar(id, tipo);
-        return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+    public ResponseEntity<?> actualizar(@PathVariable UUID id, @RequestBody TipoDocumentoDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            TipoDocumento actualizado = tipoDocumentoService.actualizar(id, dto);
+            return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
