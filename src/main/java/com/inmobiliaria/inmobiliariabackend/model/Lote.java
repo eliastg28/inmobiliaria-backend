@@ -7,12 +7,13 @@ import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "lotes", schema = "ventas")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Lote {
+public class Lote extends Auditable {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -49,7 +50,4 @@ public class Lote {
     // Dirección es opcional
     @Size(max = 200, message = "La dirección no puede superar los 200 caracteres")
     private String direccion;
-
-    @NotNull
-    private Boolean activo = true;
 }

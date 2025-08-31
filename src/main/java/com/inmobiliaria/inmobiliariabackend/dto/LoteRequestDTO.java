@@ -1,40 +1,21 @@
 package com.inmobiliaria.inmobiliariabackend.dto;
 
-import lombok.*;
-
+import lombok.Data;
 import javax.validation.constraints.*;
 import java.util.UUID;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class LoteRequestDTO {
-
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
-
-    @NotBlank
-    @Size(max = 255)
     private String descripcion;
-
-    @NotNull
-    @DecimalMin(value = "0.0", inclusive = false)
+    @NotNull(message = "El precio es obligatorio")
     private Double precio;
-
-    @NotNull
-    @DecimalMin(value = "0.0", inclusive = false)
+    @NotNull(message = "El área es obligatoria")
     private Double area;
-
-    @NotNull
+    @NotNull(message = "El estado del lote es obligatorio")
     private UUID estadoLoteId;
-
-    @NotNull
+    @NotNull(message = "El distrito es obligatorio")
     private UUID distritoId;
-
-    @Size(max = 200)
     private String direccion;
-
-    private Boolean activo = true;
 }
