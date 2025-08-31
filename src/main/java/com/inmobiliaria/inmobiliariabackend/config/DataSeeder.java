@@ -4425,8 +4425,8 @@ public class DataSeeder implements CommandLineRunner {
 
                 // 2. Buscar un lote de prueba con el nombre y el distrito.
                 //    Asumo que ya existe un distrito con el nombre "Miraflores".
-                Distrito miraflores = distritoRepository.findByNombre("Miraflores")
-                        .orElseThrow(() -> new RuntimeException("Distrito 'Miraflores' no encontrado."));
+                Distrito miraflores = distritoRepository.findByNombre("Pacasmayo")
+                        .orElseThrow(() -> new RuntimeException("Distrito 'Pacasmayo' no encontrado."));
 
                 Lote lote = loteRepository.findByNombreAndDistrito("Lote 1", miraflores)
                         .orElseThrow(() -> new RuntimeException("Lote 'Lote 1' no encontrado."));
