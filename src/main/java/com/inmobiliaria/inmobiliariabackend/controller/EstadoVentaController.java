@@ -1,12 +1,15 @@
 package com.inmobiliaria.inmobiliariabackend.controller;
 
+import com.inmobiliaria.inmobiliariabackend.dto.EstadoVentaDTO;
 import com.inmobiliaria.inmobiliariabackend.model.EstadoVenta;
 import com.inmobiliaria.inmobiliariabackend.service.EstadoVentaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,8 +27,8 @@ public class EstadoVentaController {
 
     @GetMapping
     @Operation(summary = "Listar estados de venta", description = "Obtiene todos los estados de venta activos")
-    public List<EstadoVenta> listar() {
-        return estadoVentaService.listar();
+    public ResponseEntity<List<EstadoVenta>> listar() {
+        return ResponseEntity.ok(estadoVentaService.listar());
     }
 
     @GetMapping("/{id}")
@@ -38,15 +41,26 @@ public class EstadoVentaController {
 
     @PostMapping
     @Operation(summary = "Crear estado de venta", description = "Crea un nuevo estado de venta")
-    public ResponseEntity<EstadoVenta> crear(@RequestBody EstadoVenta estado) {
-        return ResponseEntity.ok(estadoVentaService.crear(estado));
+    public ResponseEntity<?> crear(@RequestBody EstadoVentaDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            EstadoVenta creado = estadoVentaService.crear(dto);
+            return ResponseEntity
+                    .created(URI.create("/api/estados-venta/" + creado.getEstadoVentaId()))
+                    .body(creado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar estado de venta", description = "Actualiza un estado de venta existente")
-    public ResponseEntity<EstadoVenta> actualizar(@PathVariable UUID id, @RequestBody EstadoVenta estado) {
-        EstadoVenta actualizado = estadoVentaService.actualizar(id, estado);
-        return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+    public ResponseEntity<?> actualizar(@PathVariable UUID id, @RequestBody EstadoVentaDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            EstadoVenta actualizado = estadoVentaService.actualizar(id, dto);
+            return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

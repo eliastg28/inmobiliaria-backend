@@ -1,9 +1,11 @@
 package com.inmobiliaria.inmobiliariabackend.service;
 
+import com.inmobiliaria.inmobiliariabackend.dto.EstadoVentaDTO;
 import com.inmobiliaria.inmobiliariabackend.model.EstadoVenta;
 import com.inmobiliaria.inmobiliariabackend.repository.EstadoVentaRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,34 +21,54 @@ public class EstadoVentaService {
     }
 
     public List<EstadoVenta> listar() {
+        // ✨ Filtrar por fechaEliminacion
         return estadoVentaRepository.findAll()
                 .stream()
-                .filter(EstadoVenta::getActivo)
+                .filter(estado -> estado.getFechaEliminacion() == null)
                 .collect(Collectors.toList());
     }
 
     public Optional<EstadoVenta> obtenerPorId(UUID id) {
+        // ✨ Filtrar por fechaEliminacion
         return estadoVentaRepository.findById(id)
-                .filter(EstadoVenta::getActivo);
+                .filter(estado -> estado.getFechaEliminacion() == null);
     }
 
-    public EstadoVenta crear(EstadoVenta estadoVenta) {
-        return estadoVentaRepository.save(estadoVenta);
+    public EstadoVenta crear(EstadoVentaDTO dto) {
+        // ✨ Nuevo: Validar que no exista un estado de venta con el mismo nombre
+        Optional<EstadoVenta> estadoExistente = estadoVentaRepository.findByNombre(dto.getNombre());
+        if (estadoExistente.isPresent() && estadoExistente.get().getFechaEliminacion() == null) {
+            throw new IllegalArgumentException("Ya existe un estado de venta con este nombre.");
+        }
+
+        EstadoVenta nuevoEstado = new EstadoVenta();
+        nuevoEstado.setNombre(dto.getNombre());
+        nuevoEstado.setDescripcion(dto.getDescripcion());
+
+        return estadoVentaRepository.save(nuevoEstado);
     }
 
-    public EstadoVenta actualizar(UUID id, EstadoVenta estadoVentaActualizado) {
+    public EstadoVenta actualizar(UUID id, EstadoVentaDTO dto) {
         return estadoVentaRepository.findById(id)
                 .map(existente -> {
-                    existente.setNombre(estadoVentaActualizado.getNombre());
-                    existente.setDescripcion(estadoVentaActualizado.getDescripcion());
-                    existente.setActivo(estadoVentaActualizado.getActivo());
+                    // ✨ Validar que el nuevo nombre no exista en otro estado de venta
+                    if (!dto.getNombre().equalsIgnoreCase(existente.getNombre())) {
+                        Optional<EstadoVenta> estadoExistente = estadoVentaRepository.findByNombre(dto.getNombre());
+                        if (estadoExistente.isPresent() && estadoExistente.get().getFechaEliminacion() == null) {
+                            throw new IllegalArgumentException("Ya existe un estado de venta con este nombre.");
+                        }
+                    }
+
+                    existente.setNombre(dto.getNombre());
+                    existente.setDescripcion(dto.getDescripcion());
                     return estadoVentaRepository.save(existente);
-                }).orElseThrow(() -> new RuntimeException("EstadoVenta no encontrado con ID: " + id));
+                }).orElseThrow(() -> new IllegalArgumentException("Estado de Venta no encontrado con ID: " + id)); // ✨ Usar IllegalArgumentException para consistencia
     }
 
     public void eliminar(UUID id) {
         estadoVentaRepository.findById(id).ifPresent(estado -> {
-            estado.setActivo(false);
+            // ✨ Borrado lógico
+            estado.setFechaEliminacion(LocalDateTime.now());
             estadoVentaRepository.save(estado);
         });
     }

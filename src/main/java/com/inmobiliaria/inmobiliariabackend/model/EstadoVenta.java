@@ -8,12 +8,13 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "estadosVenta", schema = "ventas") // Se convertirá en "estados_venta"
+@Table(name = "estadosVenta", schema = "ventas")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class EstadoVenta {
+public class EstadoVenta extends Auditable {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -28,6 +29,4 @@ public class EstadoVenta {
     @Size(max = 255, message = "La descripción no puede superar los 255 caracteres")
     private String descripcion;
 
-    @Column(nullable = false)
-    private Boolean activo = true;
 }
