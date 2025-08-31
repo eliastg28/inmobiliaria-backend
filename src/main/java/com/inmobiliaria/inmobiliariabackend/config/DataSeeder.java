@@ -129,7 +129,6 @@ public class DataSeeder implements CommandLineRunner {
             c1.setDiasDesdeUltimaVisita(5);
             c1.setIngresosMensuales(2500.00);
             c1.setFechaRegistro(LocalDate.now());
-            c1.setActivo(true);
 
             Cliente c2 = new Cliente();
             c2.setPrimerNombre("María");
@@ -145,7 +144,6 @@ public class DataSeeder implements CommandLineRunner {
             c2.setDiasDesdeUltimaVisita(0);
             c2.setIngresosMensuales(3100.00);
             c2.setFechaRegistro(LocalDate.now());
-            c2.setActivo(true);
 
             clienteRepository.saveAll(Arrays.asList(c1, c2));
             System.out.println("✅ Clientes de prueba insertados en crm.clientes");
@@ -159,22 +157,19 @@ public class DataSeeder implements CommandLineRunner {
             EstadoLote disponible = new EstadoLote(
                     null,
                     "Disponible",
-                    "El lote está disponible para la venta",
-                    true
+                    "El lote está disponible para la venta"
             );
 
             EstadoLote reservado = new EstadoLote(
                     null,
                     "Reservado",
-                    "El lote ha sido reservado por un cliente",
-                    true
+                    "El lote ha sido reservado por un cliente"
             );
 
             EstadoLote vendido = new EstadoLote(
                     null,
                     "Vendido",
-                    "El lote ya fue vendido",
-                    true
+                    "El lote ya fue vendido"
             );
 
             estadoLoteRepository.saveAll(Arrays.asList(disponible, reservado, vendido));
@@ -189,20 +184,17 @@ public class DataSeeder implements CommandLineRunner {
             EstadoVenta pendiente = new EstadoVenta(
                     null,
                     "Pendiente",
-                    "La venta está registrada pero aún no confirmada",
-                    true
+                    "La venta está registrada pero aún no confirmada"
             );
             EstadoVenta confirmada = new EstadoVenta(
                     null,
                     "Confirmada",
-                    "La venta fue confirmada y aprobada",
-                    true
+                    "La venta fue confirmada y aprobada"
             );
             EstadoVenta cancelada = new EstadoVenta(
                     null,
                     "Cancelada",
-                    "La venta fue anulada antes de su confirmación",
-                    true
+                    "La venta fue anulada antes de su confirmación"
             );
 
             estadoVentaRepository.saveAll(Arrays.asList(pendiente, confirmada, cancelada));
@@ -213,9 +205,9 @@ public class DataSeeder implements CommandLineRunner {
     private void seedMonedas() {
         if (monedaRepository.count() == 0) {
             List<Moneda> monedas = Arrays.asList(
-                    new Moneda(null, "Sol", "S/.", "Moneda de Perú", true),
-                    new Moneda(null, "Dólar", "$", "Moneda de Estados Unidos", true),
-                    new Moneda(null, "Euro", "€", "Moneda de la Unión Europea", true)
+                    new Moneda(null, "Sol", "S/.", "Moneda de Perú"),
+                    new Moneda(null, "Dólar", "$", "Moneda de Estados Unidos"),
+                    new Moneda(null, "Euro", "€", "Moneda de la Unión Europea")
             );
             monedaRepository.saveAll(monedas);
         }
@@ -224,10 +216,10 @@ public class DataSeeder implements CommandLineRunner {
     private void seedTiposDocumento() {
         if (tipoDocumentoRepository.count() == 0) {
             List<TipoDocumento> tipos = Arrays.asList(
-                    new TipoDocumento(null, "DNI", "Documento Nacional de Identidad", true),
-                    new TipoDocumento(null, "Pasaporte", "Documento de viaje emitido por un país", true),
-                    new TipoDocumento(null, "Carnet de Extranjería", "Documento para extranjeros residentes", true),
-                    new TipoDocumento(null, "RUC", "Registro Único de Contribuyente", true)
+                    new TipoDocumento(null, "DNI", "Documento Nacional de Identidad"),
+                    new TipoDocumento(null, "Pasaporte", "Documento de viaje emitido por un país"),
+                    new TipoDocumento(null, "Carnet de Extranjería", "Documento para extranjeros residentes"),
+                    new TipoDocumento(null, "RUC", "Registro Único de Contribuyente")
             );
             tipoDocumentoRepository.saveAll(tipos);
             System.out.println("✔ Tipos de Documento iniciales insertados.");
@@ -236,9 +228,9 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedTiposLote() {
         if (tipoLoteRepository.count() == 0) {
-            TipoLote residencial = new TipoLote(null, "Residencial", "Lote destinado a vivienda", true);
-            TipoLote comercial = new TipoLote(null, "Comercial", "Lote destinado a negocios", true);
-            TipoLote industrial = new TipoLote(null, "Industrial", "Lote destinado a fábricas o almacenes", true);
+            TipoLote residencial = new TipoLote(null, "Residencial", "Lote destinado a vivienda");
+            TipoLote comercial = new TipoLote(null, "Comercial", "Lote destinado a negocios");
+            TipoLote industrial = new TipoLote(null, "Industrial", "Lote destinado a fábricas o almacenes");
 
             tipoLoteRepository.saveAll(Arrays.asList(residencial, comercial, industrial));
             System.out.println(">>> Se insertaron los tipos de lote por defecto");
@@ -4409,7 +4401,6 @@ public class DataSeeder implements CommandLineRunner {
                 lote.setEstadoLote(disponible);
                 lote.setDistrito(distrito);
                 lote.setDireccion("Mz " + i + " Lt " + (i + 10));
-                lote.setActivo(true);
 
                 loteRepository.save(lote);
             }
@@ -4420,39 +4411,54 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedVentas() {
-        if (ventaRepository.count() == 0) {
-            // 1. Buscar Cliente por numeroDocumento
-            Cliente cliente = clienteRepository.findByNumeroDocumento("12345678")
-                    .orElseThrow(() -> new RuntimeException("Cliente con documento '12345678' no encontrado"));
+        // Verificar si ya existen ventas activas para evitar duplicados
+        if (ventaRepository.findByFechaEliminacionIsNull().isEmpty()) {
+            try {
+                // 1. Buscar un cliente con el número de documento y el tipo de documento.
+                //    Necesitas el ID del TipoDocumento para una búsqueda precisa.
+                //    Asumo que ya existe un tipo de documento con el nombre "DNI".
+                TipoDocumento dni = tipoDocumentoRepository.findByNombre("DNI")
+                        .orElseThrow(() -> new RuntimeException("TipoDocumento 'DNI' no encontrado."));
 
-            // 2. Buscar Lote de prueba (ajusta según tu repositorio de Lotes)
-            Lote lote = loteRepository.findByNombre("Lote 1")
-                    .orElseThrow(() -> new RuntimeException("Lote 'Lote 1' no encontrado"));
+                Cliente cliente = clienteRepository.findByNumeroDocumentoAndTipoDocumento("12345678", dni)
+                        .orElseThrow(() -> new RuntimeException("Cliente con documento '12345678' no encontrado."));
 
-            // 3. Buscar Estado de Venta (ej. "Pendiente")
-            EstadoVenta estadoVenta = estadoVentaRepository.findByNombre("Pendiente")
-                    .orElseThrow(() -> new RuntimeException("EstadoVenta 'Pendiente' no encontrado"));
+                // 2. Buscar un lote de prueba con el nombre y el distrito.
+                //    Asumo que ya existe un distrito con el nombre "Miraflores".
+                Distrito miraflores = distritoRepository.findByNombre("Miraflores")
+                        .orElseThrow(() -> new RuntimeException("Distrito 'Miraflores' no encontrado."));
 
-            // 4. Buscar Moneda (ej. "Sol")
-            Moneda moneda = monedaRepository.findByNombre("Sol")
-                    .orElseThrow(() -> new RuntimeException("Moneda 'Sol' no encontrada"));
+                Lote lote = loteRepository.findByNombreAndDistrito("Lote 1", miraflores)
+                        .orElseThrow(() -> new RuntimeException("Lote 'Lote 1' no encontrado."));
 
-            // 5. Crear la venta de prueba
-            Venta ventaPrueba = new Venta(
-                    null,            // UUID generado automáticamente
-                    cliente,
-                    lote,
-                    estadoVenta,
-                    moneda,
-                    LocalDate.now(),
-                    150000.00,       // monto de prueba
-                    true             // activo
-            );
+                // 3. Buscar el estado de venta "Pendiente"
+                EstadoVenta estadoVenta = estadoVentaRepository.findByNombre("Pendiente")
+                        .orElseThrow(() -> new RuntimeException("EstadoVenta 'Pendiente' no encontrado."));
 
-            ventaRepository.save(ventaPrueba);
-            System.out.println("✅ Venta de prueba insertada en ventas.ventas");
+                // 4. Buscar la moneda "Sol"
+                Moneda moneda = monedaRepository.findByNombre("Sol")
+                        .orElseThrow(() -> new RuntimeException("Moneda 'Sol' no encontrada."));
+
+                // 5. Crear la venta de prueba y mapear el DTO
+                Venta nuevaVenta = new Venta();
+                nuevaVenta.setCliente(cliente);
+                nuevaVenta.setLote(lote);
+                nuevaVenta.setEstadoVenta(estadoVenta);
+                nuevaVenta.setMoneda(moneda);
+                nuevaVenta.setFechaVenta(LocalDate.now());
+                nuevaVenta.setMontoTotal(150000.00);
+
+                // La propiedad 'activo' ahora se gestiona internamente por la clase Auditable
+                // no es necesario pasarla en el constructor ni establecerla.
+
+                ventaRepository.save(nuevaVenta);
+                System.out.println("✅ Venta de prueba insertada en ventas.ventas");
+
+            } catch (RuntimeException e) {
+                System.err.println("❌ Error al insertar la venta: " + e.getMessage());
+            }
         } else {
-            System.out.println("ℹ️ Ya existen ventas en la base de datos, no se insertaron duplicados.");
+            System.out.println("ℹ️ Ya existen ventas activas, no se insertaron duplicados.");
         }
     }
 }
