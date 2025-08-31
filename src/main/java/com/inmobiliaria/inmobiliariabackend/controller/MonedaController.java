@@ -1,12 +1,15 @@
 package com.inmobiliaria.inmobiliariabackend.controller;
 
+import com.inmobiliaria.inmobiliariabackend.dto.MonedaDTO;
 import com.inmobiliaria.inmobiliariabackend.model.Moneda;
 import com.inmobiliaria.inmobiliariabackend.service.MonedaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,8 +27,8 @@ public class MonedaController {
 
     @GetMapping
     @Operation(summary = "Listar monedas", description = "Obtiene todas las monedas activas")
-    public List<Moneda> listar() {
-        return monedaService.listar();
+    public ResponseEntity<List<Moneda>> listar() {
+        return ResponseEntity.ok(monedaService.listar());
     }
 
     @GetMapping("/{id}")
@@ -38,15 +41,26 @@ public class MonedaController {
 
     @PostMapping
     @Operation(summary = "Crear moneda", description = "Crea una nueva moneda")
-    public ResponseEntity<Moneda> crear(@RequestBody Moneda moneda) {
-        return ResponseEntity.ok(monedaService.crear(moneda));
+    public ResponseEntity<?> crear(@RequestBody MonedaDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            Moneda creado = monedaService.crear(dto);
+            return ResponseEntity
+                    .created(URI.create("/api/monedas/" + creado.getMonedaId()))
+                    .body(creado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar moneda", description = "Actualiza una moneda existente")
-    public ResponseEntity<Moneda> actualizar(@PathVariable UUID id, @RequestBody Moneda moneda) {
-        Moneda actualizada = monedaService.actualizar(id, moneda);
-        return actualizada != null ? ResponseEntity.ok(actualizada) : ResponseEntity.notFound().build();
+    public ResponseEntity<?> actualizar(@PathVariable UUID id, @RequestBody MonedaDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            Moneda actualizada = monedaService.actualizar(id, dto);
+            return actualizada != null ? ResponseEntity.ok(actualizada) : ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
