@@ -1,12 +1,15 @@
 package com.inmobiliaria.inmobiliariabackend.controller;
 
+import com.inmobiliaria.inmobiliariabackend.dto.EstadoLoteDTO;
 import com.inmobiliaria.inmobiliariabackend.model.EstadoLote;
 import com.inmobiliaria.inmobiliariabackend.service.EstadoLoteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,8 +27,8 @@ public class EstadoLoteController {
 
     @GetMapping
     @Operation(summary = "Listar estados de lote", description = "Obtiene todos los estados de lote activos")
-    public List<EstadoLote> listar() {
-        return estadoLoteService.listar();
+    public ResponseEntity<List<EstadoLote>> listar() {
+        return ResponseEntity.ok(estadoLoteService.listar());
     }
 
     @GetMapping("/{id}")
@@ -38,15 +41,26 @@ public class EstadoLoteController {
 
     @PostMapping
     @Operation(summary = "Crear estado de lote", description = "Crea un nuevo estado de lote")
-    public ResponseEntity<EstadoLote> crear(@RequestBody EstadoLote estado) {
-        return ResponseEntity.ok(estadoLoteService.crear(estado));
+    public ResponseEntity<?> crear(@RequestBody EstadoLoteDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            EstadoLote creado = estadoLoteService.crear(dto);
+            return ResponseEntity
+                    .created(URI.create("/api/estados-lote/" + creado.getEstadoLoteId()))
+                    .body(creado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar estado de lote", description = "Actualiza un estado de lote existente")
-    public ResponseEntity<EstadoLote> actualizar(@PathVariable UUID id, @RequestBody EstadoLote estado) {
-        EstadoLote actualizado = estadoLoteService.actualizar(id, estado);
-        return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+    public ResponseEntity<?> actualizar(@PathVariable UUID id, @RequestBody EstadoLoteDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            EstadoLote actualizado = estadoLoteService.actualizar(id, dto);
+            return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
