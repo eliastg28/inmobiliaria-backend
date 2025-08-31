@@ -1,8 +1,9 @@
 package com.inmobiliaria.inmobiliariabackend.model;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -12,12 +13,13 @@ import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true) // ✨ Nuevo: Asegura que equals/hashCode consideren campos de la clase padre
 @Entity
 @Table(name = "clientes", schema = "crm")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Cliente {
+public class Cliente extends Auditable {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -62,6 +64,4 @@ public class Cliente {
 
     private LocalDate fechaRegistro;
 
-    @Column(nullable = false)
-    private Boolean activo = true;
 }

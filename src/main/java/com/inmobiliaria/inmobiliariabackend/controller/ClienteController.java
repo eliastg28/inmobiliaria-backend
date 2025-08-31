@@ -1,12 +1,15 @@
 package com.inmobiliaria.inmobiliariabackend.controller;
 
+import com.inmobiliaria.inmobiliariabackend.dto.ClienteDTO;
 import com.inmobiliaria.inmobiliariabackend.model.Cliente;
 import com.inmobiliaria.inmobiliariabackend.service.ClienteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,8 +27,8 @@ public class ClienteController {
 
     @GetMapping
     @Operation(summary = "Listar clientes", description = "Obtiene todos los clientes activos")
-    public List<Cliente> listarTodos() {
-        return clienteService.listarClientes();
+    public ResponseEntity<List<Cliente>> listarTodos() {
+        return ResponseEntity.ok(clienteService.listarClientes());
     }
 
     @GetMapping("/{id}")
@@ -38,15 +41,26 @@ public class ClienteController {
 
     @PostMapping
     @Operation(summary = "Crear cliente", description = "Crea un nuevo cliente")
-    public ResponseEntity<Cliente> crear(@RequestBody Cliente cliente) {
-        return ResponseEntity.ok(clienteService.crearCliente(cliente));
+    public ResponseEntity<?> crear(@RequestBody ClienteDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            Cliente creado = clienteService.crearCliente(dto);
+            return ResponseEntity
+                    .created(URI.create("/api/clientes/" + creado.getClienteId()))
+                    .body(creado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar cliente", description = "Actualiza un cliente existente")
-    public ResponseEntity<Cliente> actualizar(@PathVariable UUID id, @RequestBody Cliente cliente) {
-        Cliente actualizado = clienteService.actualizarCliente(id, cliente);
-        return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+    public ResponseEntity<?> actualizar(@PathVariable UUID id, @RequestBody ClienteDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            Cliente actualizado = clienteService.actualizarCliente(id, dto);
+            return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
