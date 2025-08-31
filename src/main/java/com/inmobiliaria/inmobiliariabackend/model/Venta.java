@@ -2,6 +2,7 @@ package com.inmobiliaria.inmobiliariabackend.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -10,12 +11,13 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "ventas", schema = "ventas")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Venta {
+public class Venta extends Auditable { // ✨ Se extiende de Auditable
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -47,7 +49,4 @@ public class Venta {
     private LocalDate fechaVenta;
 
     private Double montoTotal;
-
-    @Column(nullable = false)
-    private Boolean activo = true;
 }
