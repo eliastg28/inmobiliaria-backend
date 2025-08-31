@@ -18,7 +18,7 @@ public class DepartamentoService {
         this.departamentoRepository = departamentoRepository;
     }
 
-    public List<Departamento> listar() {
+    public List<Departamento> listarActivos() {
         return departamentoRepository.findAll()
                 .stream()
                 .filter(Departamento::getActivo)
@@ -30,23 +30,16 @@ public class DepartamentoService {
                 .filter(Departamento::getActivo);
     }
 
-    public Departamento crear(Departamento departamento) {
-        return departamentoRepository.save(departamento);
-    }
-
-    public Departamento actualizar(UUID id, Departamento datos) {
-        return departamentoRepository.findById(id)
-                .map(dep -> {
-                    dep.setNombre(datos.getNombre());
-                    dep.setDescripcion(datos.getDescripcion());
-                    return departamentoRepository.save(dep);
-                }).orElse(null);
-    }
-
-    public void eliminar(UUID id) {
-        departamentoRepository.findById(id).ifPresent(dep -> {
-            dep.setActivo(false);
-            departamentoRepository.save(dep);
-        });
+    /**
+     * Busca departamentos activos por una parte de su nombre.
+     *
+     * @param nombre El texto a buscar en el nombre del departamento.
+     * @return Una lista de departamentos que coinciden con el criterio de búsqueda.
+     */
+    public List<Departamento> buscarPorNombre(String nombre) {
+        return departamentoRepository.findByNombreContainingIgnoreCase(nombre)
+                .stream()
+                .filter(Departamento::getActivo)
+                .collect(Collectors.toList());
     }
 }

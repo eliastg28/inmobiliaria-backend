@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface LoteRepository extends JpaRepository<Lote, UUID> {
+    Optional<Lote> findByNombre(String nombre);
     // ✨ Nuevo: Para la validación de unicidad
     Optional<Lote> findByNombreAndDistrito(String nombre, Distrito distrito);
 

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "Distritos", description = "Gestión de distritos geográficos")
+@Tag(name = "Distritos", description = "Gestión de distritos geográficos (solo lectura)")
 @RestController
 @RequestMapping("/api/distritos")
 @CrossOrigin(origins = "*")
@@ -23,36 +23,20 @@ public class DistritoController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar distritos", description = "Obtiene todos los distritos activos")
-    public List<Distrito> listar() {
-        return distritoService.listar();
+    @Operation(summary = "Listar y buscar distritos", description = "Obtiene todos los distritos activos o los filtra por nombre.")
+    public ResponseEntity<List<Distrito>> listar(@RequestParam(required = false) String nombre) {
+        if (nombre != null && !nombre.trim().isEmpty()) {
+            return ResponseEntity.ok(distritoService.buscarPorNombre(nombre));
+        } else {
+            return ResponseEntity.ok(distritoService.listarActivos());
+        }
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Obtener distrito por ID", description = "Obtiene un distrito por su ID")
+    @Operation(summary = "Obtener distrito por ID", description = "Obtiene un distrito activo por su ID.")
     public ResponseEntity<Distrito> obtenerPorId(@PathVariable UUID id) {
         return distritoService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    @Operation(summary = "Crear distrito", description = "Crea un nuevo distrito")
-    public ResponseEntity<Distrito> crear(@RequestBody Distrito distrito) {
-        return ResponseEntity.ok(distritoService.crear(distrito));
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar distrito", description = "Actualiza un distrito existente")
-    public ResponseEntity<Distrito> actualizar(@PathVariable UUID id, @RequestBody Distrito distrito) {
-        Distrito actualizada = distritoService.actualizar(id, distrito);
-        return actualizada != null ? ResponseEntity.ok(actualizada) : ResponseEntity.notFound().build();
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar distrito", description = "Elimina un distrito (lógicamente)")
-    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
-        distritoService.eliminar(id);
-        return ResponseEntity.noContent().build();
     }
 }

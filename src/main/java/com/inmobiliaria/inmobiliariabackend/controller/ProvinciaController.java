@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "Provincias", description = "Gestión de provincias geográficas")
+@Tag(name = "Provincias", description = "Gestión de provincias geográficas (solo lectura)")
 @RestController
 @RequestMapping("/api/provincias")
 @CrossOrigin(origins = "*")
@@ -23,36 +23,20 @@ public class ProvinciaController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar provincias", description = "Obtiene todas las provincias activas")
-    public List<Provincia> listar() {
-        return provinciaService.listar();
+    @Operation(summary = "Listar y buscar provincias", description = "Obtiene todas las provincias activas o las filtra por nombre.")
+    public ResponseEntity<List<Provincia>> listar(@RequestParam(required = false) String nombre) {
+        if (nombre != null && !nombre.trim().isEmpty()) {
+            return ResponseEntity.ok(provinciaService.buscarPorNombre(nombre));
+        } else {
+            return ResponseEntity.ok(provinciaService.listarActivas());
+        }
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Obtener provincia por ID", description = "Obtiene una provincia por su ID")
+    @Operation(summary = "Obtener provincia por ID", description = "Obtiene una provincia activa por su ID.")
     public ResponseEntity<Provincia> obtenerPorId(@PathVariable UUID id) {
         return provinciaService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    @Operation(summary = "Crear provincia", description = "Crea una nueva provincia")
-    public ResponseEntity<Provincia> crear(@RequestBody Provincia provincia) {
-        return ResponseEntity.ok(provinciaService.crear(provincia));
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar provincia", description = "Actualiza una provincia existente")
-    public ResponseEntity<Provincia> actualizar(@PathVariable UUID id, @RequestBody Provincia provincia) {
-        Provincia actualizada = provinciaService.actualizar(id, provincia);
-        return actualizada != null ? ResponseEntity.ok(actualizada) : ResponseEntity.notFound().build();
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar provincia", description = "Elimina una provincia (lógicamente)")
-    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
-        provinciaService.eliminar(id);
-        return ResponseEntity.noContent().build();
     }
 }

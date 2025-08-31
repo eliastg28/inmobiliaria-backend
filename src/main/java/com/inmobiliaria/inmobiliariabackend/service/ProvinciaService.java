@@ -18,7 +18,7 @@ public class ProvinciaService {
         this.provinciaRepository = provinciaRepository;
     }
 
-    public List<Provincia> listar() {
+    public List<Provincia> listarActivas() {
         return provinciaRepository.findAll()
                 .stream()
                 .filter(Provincia::getActivo)
@@ -30,24 +30,13 @@ public class ProvinciaService {
                 .filter(Provincia::getActivo);
     }
 
-    public Provincia crear(Provincia provincia) {
-        return provinciaRepository.save(provincia);
-    }
-
-    public Provincia actualizar(UUID id, Provincia datos) {
-        return provinciaRepository.findById(id)
-                .map(p -> {
-                    p.setNombre(datos.getNombre());
-                    p.setDescripcion(datos.getDescripcion());
-                    p.setDepartamento(datos.getDepartamento());
-                    return provinciaRepository.save(p);
-                }).orElse(null);
-    }
-
-    public void eliminar(UUID id) {
-        provinciaRepository.findById(id).ifPresent(p -> {
-            p.setActivo(false);
-            provinciaRepository.save(p);
-        });
+    /**
+     * Busca provincias activas por una parte de su nombre.
+     *
+     * @param nombre El texto a buscar en el nombre de la provincia.
+     * @return Una lista de provincias que coinciden con el criterio de búsqueda.
+     */
+    public List<Provincia> buscarPorNombre(String nombre) {
+        return provinciaRepository.findByNombreContainingIgnoreCaseAndActivoTrue(nombre);
     }
 }

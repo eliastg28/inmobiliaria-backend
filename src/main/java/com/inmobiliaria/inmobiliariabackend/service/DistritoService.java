@@ -18,7 +18,7 @@ public class DistritoService {
         this.distritoRepository = distritoRepository;
     }
 
-    public List<Distrito> listar() {
+    public List<Distrito> listarActivos() {
         return distritoRepository.findAll()
                 .stream()
                 .filter(Distrito::getActivo)
@@ -30,27 +30,13 @@ public class DistritoService {
                 .filter(Distrito::getActivo);
     }
 
-    public Distrito crear(Distrito distrito) {
-        distrito.setActivo(true);
-        return distritoRepository.save(distrito);
-    }
-
-    public Distrito actualizar(UUID id, Distrito distrito) {
-        return distritoRepository.findById(id)
-                .map(d -> {
-                    d.setNombre(distrito.getNombre());
-                    d.setDescripcion(distrito.getDescripcion());
-                    d.setProvincia(distrito.getProvincia());
-                    return distritoRepository.save(d);
-                })
-                .orElse(null);
-    }
-
-    public void eliminar(UUID id) {
-        distritoRepository.findById(id)
-                .ifPresent(d -> {
-                    d.setActivo(false);
-                    distritoRepository.save(d);
-                });
+    /**
+     * Busca distritos activos por una parte de su nombre.
+     *
+     * @param nombre El texto a buscar en el nombre del distrito.
+     * @return Una lista de distritos que coinciden con el criterio de búsqueda.
+     */
+    public List<Distrito> buscarPorNombre(String nombre) {
+        return distritoRepository.findByNombreContainingIgnoreCaseAndActivoTrue(nombre);
     }
 }
