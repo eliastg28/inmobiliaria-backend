@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -248,8 +249,9 @@ public class DataSeeder implements CommandLineRunner {
         if (usuarioRolRepository.count() == 0) {
 
             List<UsuarioRol> roles = Arrays.asList(
-                    new UsuarioRol(null, "01", "ADMIN", true),
-                    new UsuarioRol(null, "02", "USER", true)
+                    new UsuarioRol(null, "PROPIETARIO"),
+                    new UsuarioRol(null, "ADMIN"),
+                    new UsuarioRol(null, "AGENTE VENTAS")
             );
 
             usuarioRolRepository.saveAll(roles);
@@ -260,25 +262,33 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedUsuarios() {
         if (usuarioRepository.count() == 0) {
-
-            UsuarioRol rolAdmin = usuarioRolRepository.findByCodigo("01")
+            UsuarioRol rolPropietario = usuarioRolRepository.findByNombre("PROPIETARIO")
                     .orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado"));
-            UsuarioRol rolUser = usuarioRolRepository.findByCodigo("02")
-                    .orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
+            UsuarioRol rolAdmin = usuarioRolRepository.findByNombre("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado"));
+            UsuarioRol rolUser = usuarioRolRepository.findByNombre("AGENTE VENTAS")
+                    .orElseThrow(() -> new RuntimeException("Rol AGENTE VENTAS no encontrado"));
 
             List<Usuario> usuarios = Arrays.asList(
                     new Usuario(
                             null,
+                            "propietario",
+                            passwordEncoder.encode("propietario"),
+                            Set.of(rolPropietario),
+                            true
+                    ),
+                    new Usuario(
+                            null,
                             "admin",
                             passwordEncoder.encode("admin"),
-                            Set.of(rolAdmin, rolUser), // Admin tiene todos los roles
+                            Set.of(rolAdmin, rolUser),
                             true
                     ),
                     new Usuario(
                             null,
                             "user",
                             passwordEncoder.encode("user"),
-                            Set.of(rolUser), // Usuario normal solo ROLE_USER
+                            Set.of(rolUser),
                             true
                     )
             );

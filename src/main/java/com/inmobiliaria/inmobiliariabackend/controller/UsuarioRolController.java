@@ -5,6 +5,7 @@ import com.inmobiliaria.inmobiliariabackend.model.UsuarioRol;
 import com.inmobiliaria.inmobiliariabackend.service.UsuarioRolService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,34 +41,37 @@ public class UsuarioRolController {
 
     @PostMapping
     @Operation(summary = "Crear rol de usuario", description = "Crea un nuevo rol de usuario")
-    public ResponseEntity<UsuarioRol> crear(@RequestBody UsuarioRolDTO dto) {
-        UsuarioRol nuevoRol = new UsuarioRol();
-        nuevoRol.setCodigo(dto.getCodigo());
-        nuevoRol.setNombre(dto.getNombre());
-        nuevoRol.setActivo(true);
+    public ResponseEntity<?> crear(@RequestBody UsuarioRolDTO dto) { // ✨ CORREGIDO: Usar DTO en el request
+        try {
+            UsuarioRol nuevoRol = new UsuarioRol();
+            nuevoRol.setNombre(dto.getNombre());
 
-        UsuarioRol creado = service.crear(nuevoRol);
-        return ResponseEntity
-                .created(URI.create("/api/roles/" + creado.getUsuarioRolId()))
-                .body(creado);
+            UsuarioRol creado = service.crear(nuevoRol);
+            return ResponseEntity
+                    .created(URI.create("/api/roles/" + creado.getUsuarioRolId()))
+                    .body(creado);
+        } catch (IllegalArgumentException e) {
+            // Manejar el caso donde el rol ya existe
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar rol de usuario", description = "Actualiza un rol de usuario existente")
-    public ResponseEntity<UsuarioRol> actualizar(@PathVariable UUID id, @RequestBody UsuarioRolDTO dto) {
-        UsuarioRol rol = new UsuarioRol();
-        rol.setCodigo(dto.getCodigo());
-        rol.setNombre(dto.getNombre());
-        rol.setActivo(dto.getActivo());
-
-        UsuarioRol actualizado = service.actualizar(id, rol);
+    public ResponseEntity<UsuarioRol> actualizar(@PathVariable UUID id, @RequestBody UsuarioRolDTO dto) { // ✨ CORREGIDO: Usar DTO
+        UsuarioRol actualizado = service.actualizar(id, dto);
         return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar rol de usuario", description = "Elimina un rol de usuario (lógicamente)")
-    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
-        service.eliminar(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> eliminar(@PathVariable UUID id) {
+        try {
+            service.eliminar(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException e) {
+            // Manejar el caso donde el rol está en uso
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 }

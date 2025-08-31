@@ -29,7 +29,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario user = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UsernameNotFoundException("Credenciales no válidas"));
+
+        if (!user.getActivo() || user.getFechaEliminacion() != null) {
+            throw new UsernameNotFoundException("Credenciales no válidas");
+        }
 
         Set<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(UsuarioRol::getNombre)
@@ -37,24 +41,5 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .collect(Collectors.toSet());
 
         return new User(user.getUsername(), user.getPassword(), authorities);
-    }
-
-    public Usuario registrarUsuario(String username, String password, List<String> codigosRoles) {
-        if (usuarioRepository.findByUsername(username).isPresent()) {
-            throw new RuntimeException("El usuario ya existe");
-        }
-
-        Usuario nuevo = new Usuario();
-        nuevo.setUsername(username);
-        nuevo.setPassword(passwordEncoder.encode(password));
-
-        Set<UsuarioRol> roles = codigosRoles.stream()
-                .map(codigo -> usuarioRolRepository.findByCodigo(codigo)
-                        .orElseThrow(() -> new RuntimeException("Rol con código " + codigo + " no encontrado")))
-                .collect(Collectors.toSet());
-
-        nuevo.setRoles(roles);
-
-        return usuarioRepository.save(nuevo);
     }
 }

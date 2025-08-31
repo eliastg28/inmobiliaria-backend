@@ -13,7 +13,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsuarioRol {
+public class UsuarioRol extends Auditable {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -21,12 +21,6 @@ public class UsuarioRol {
     @Column(name = "usuarioRolId", updatable = false, nullable = false)
     private UUID usuarioRolId;
 
-    @Column(nullable = false, unique = true, length = 5)
-    private String codigo;
-
     @Column(nullable = false, length = 50)
     private String nombre;
-
-    @Column(nullable = false)
-    private Boolean activo = true;
 }

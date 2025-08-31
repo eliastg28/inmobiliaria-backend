@@ -19,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode(exclude = "roles")
 @ToString(exclude = "roles")
-public class Usuario {
+public class Usuario extends Auditable {
 
     @Id
     @GeneratedValue(generator = "UUID")

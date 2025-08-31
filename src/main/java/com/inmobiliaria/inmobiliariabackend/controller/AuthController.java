@@ -66,17 +66,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/register")
-    @Operation(summary = "Crear usuario", description = "Crea un nuevo usuario con roles asignados")
-    public ResponseEntity<?> register(@RequestBody RegistroUsuarioDTO dto) {
-        try {
-            Usuario creado = userDetailsService.registrarUsuario(dto.getUsername(), dto.getPassword(), dto.getRoles());
-            return ResponseEntity.ok("Usuario creado con éxito: " + creado.getUsername());
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
     @GetMapping("validate-token")
     @Operation(summary = "Validar token JWT", description = "Valida que el token JWT enviado sea válido")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
