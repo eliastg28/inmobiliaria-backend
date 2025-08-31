@@ -1,12 +1,15 @@
 package com.inmobiliaria.inmobiliariabackend.controller;
 
+import com.inmobiliaria.inmobiliariabackend.dto.TipoLoteDTO;
 import com.inmobiliaria.inmobiliariabackend.model.TipoLote;
 import com.inmobiliaria.inmobiliariabackend.service.TipoLoteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,8 +27,8 @@ public class TipoLoteController {
 
     @GetMapping
     @Operation(summary = "Listar tipos de lote", description = "Obtiene todos los tipos de lote activos")
-    public List<TipoLote> listar() {
-        return service.listar();
+    public ResponseEntity<List<TipoLote>> listar() {
+        return ResponseEntity.ok(service.listar());
     }
 
     @GetMapping("/{id}")
@@ -38,15 +41,26 @@ public class TipoLoteController {
 
     @PostMapping
     @Operation(summary = "Crear tipo de lote", description = "Crea un nuevo tipo de lote")
-    public ResponseEntity<TipoLote> crear(@RequestBody TipoLote tipo) {
-        return ResponseEntity.ok(service.crear(tipo));
+    public ResponseEntity<?> crear(@RequestBody TipoLoteDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            TipoLote creado = service.crear(dto);
+            return ResponseEntity
+                    .created(URI.create("/api/tipos-lote/" + creado.getTipoLoteId()))
+                    .body(creado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar tipo de lote", description = "Actualiza un tipo de lote existente")
-    public ResponseEntity<TipoLote> actualizar(@PathVariable UUID id, @RequestBody TipoLote tipo) {
-        TipoLote actualizado = service.actualizar(id, tipo);
-        return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+    public ResponseEntity<?> actualizar(@PathVariable UUID id, @RequestBody TipoLoteDTO dto) { // ✨ CORREGIDO: Usar DTO
+        try {
+            TipoLote actualizado = service.actualizar(id, dto);
+            return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

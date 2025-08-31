@@ -1,9 +1,11 @@
 package com.inmobiliaria.inmobiliariabackend.service;
 
+import com.inmobiliaria.inmobiliariabackend.dto.TipoLoteDTO;
 import com.inmobiliaria.inmobiliariabackend.model.TipoLote;
 import com.inmobiliaria.inmobiliariabackend.repository.TipoLoteRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,33 +21,54 @@ public class TipoLoteService {
     }
 
     public List<TipoLote> listar() {
+        // ✨ Filtrar por fechaEliminacion
         return tipoLoteRepository.findAll()
                 .stream()
-                .filter(TipoLote::getActivo)
+                .filter(tipo -> tipo.getFechaEliminacion() == null)
                 .collect(Collectors.toList());
     }
 
     public Optional<TipoLote> obtenerPorId(UUID id) {
+        // ✨ Filtrar por fechaEliminacion
         return tipoLoteRepository.findById(id)
-                .filter(TipoLote::getActivo);
+                .filter(tipo -> tipo.getFechaEliminacion() == null);
     }
 
-    public TipoLote crear(TipoLote tipo) {
-        return tipoLoteRepository.save(tipo);
+    public TipoLote crear(TipoLoteDTO dto) {
+        // ✨ Nuevo: Validar que no exista un tipo de lote con el mismo nombre
+        Optional<TipoLote> tipoExistente = tipoLoteRepository.findByNombre(dto.getNombre());
+        if (tipoExistente.isPresent() && tipoExistente.get().getFechaEliminacion() == null) {
+            throw new IllegalArgumentException("Ya existe un tipo de lote con este nombre.");
+        }
+
+        TipoLote nuevoTipo = new TipoLote();
+        nuevoTipo.setNombre(dto.getNombre());
+        nuevoTipo.setDescripcion(dto.getDescripcion());
+
+        return tipoLoteRepository.save(nuevoTipo);
     }
 
-    public TipoLote actualizar(UUID id, TipoLote datos) {
+    public TipoLote actualizar(UUID id, TipoLoteDTO dto) {
         return tipoLoteRepository.findById(id)
                 .map(existente -> {
-                    existente.setNombre(datos.getNombre());
-                    existente.setDescripcion(datos.getDescripcion());
+                    // ✨ Validar que el nuevo nombre no exista en otro tipo de lote
+                    if (!dto.getNombre().equalsIgnoreCase(existente.getNombre())) {
+                        Optional<TipoLote> tipoExistente = tipoLoteRepository.findByNombre(dto.getNombre());
+                        if (tipoExistente.isPresent() && tipoExistente.get().getFechaEliminacion() == null) {
+                            throw new IllegalArgumentException("Ya existe un tipo de lote con este nombre.");
+                        }
+                    }
+
+                    existente.setNombre(dto.getNombre());
+                    existente.setDescripcion(dto.getDescripcion());
                     return tipoLoteRepository.save(existente);
                 }).orElse(null);
     }
 
     public void eliminar(UUID id) {
         tipoLoteRepository.findById(id).ifPresent(tipo -> {
-            tipo.setActivo(false); // eliminación lógica
+            // ✨ Borrado lógico
+            tipo.setFechaEliminacion(LocalDateTime.now());
             tipoLoteRepository.save(tipo);
         });
     }
