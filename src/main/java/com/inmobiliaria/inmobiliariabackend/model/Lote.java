@@ -1,5 +1,6 @@
 package com.inmobiliaria.inmobiliariabackend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -43,9 +44,10 @@ public class Lote extends Auditable {
     private EstadoLote estadoLote;
 
     @ManyToOne
-    @JoinColumn(name = "distritoId", nullable = false)
-    @NotNull(message = "El distrito es obligatorio")
-    private Distrito distrito;
+    @JoinColumn(name = "proyectoId", nullable = false)
+    @NotNull(message = "El proyecto es obligatorio")
+    @JsonBackReference
+    private Proyecto proyecto;
 
     // Dirección es opcional
     @Size(max = 200, message = "La dirección no puede superar los 200 caracteres")

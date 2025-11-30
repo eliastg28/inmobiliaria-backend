@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Tag(name = "Lotes", description = "Operaciones relacionadas con los lotes del sistema inmobiliario")
@@ -28,7 +29,9 @@ public class LoteController {
         this.loteService = loteService;
     }
 
-    @Operation(summary = "Crear un nuevo lote", description = "Registra un nuevo lote en el sistema.")
+    // --- CRUD BÁSICO ---
+
+    @Operation(summary = "Crear un nuevo lote", description = "Registra un nuevo lote asociado a un proyecto.")
     @ApiResponse(responseCode = "201", description = "Lote creado exitosamente")
     @PostMapping
     public ResponseEntity<?> crear(@Validated @RequestBody LoteRequestDTO dto) {
@@ -36,6 +39,7 @@ public class LoteController {
             LoteResponseDTO creado = loteService.guardarLote(dto);
             return ResponseEntity.created(URI.create("/api/lotes/" + creado.getLoteId())).body(creado);
         } catch (IllegalArgumentException e) {
+            // Maneja errores de unicidad o Proyecto/EstadoLote no encontrado
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
@@ -48,6 +52,7 @@ public class LoteController {
             LoteResponseDTO actualizado = loteService.actualizarLote(id, dto);
             return ResponseEntity.ok(actualizado);
         } catch (IllegalArgumentException e) {
+            // Maneja Lote no encontrado o error de unicidad al actualizar
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
@@ -63,6 +68,16 @@ public class LoteController {
         }
     }
 
+    @Operation(summary = "Eliminar un lote (lógicamente)", description = "Marca un lote como inactivo.")
+    @ApiResponse(responseCode = "204", description = "Lote eliminado exitosamente")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
+        loteService.eliminarLote(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // --- LISTADOS Y BÚSQUEDAS ---
+
     @Operation(summary = "Listar lotes activos", description = "Devuelve una lista de todos los lotes que están activos.")
     @ApiResponse(responseCode = "200", description = "Listado de lotes activos")
     @GetMapping("/activos")
@@ -70,11 +85,22 @@ public class LoteController {
         return ResponseEntity.ok(loteService.listarActivos());
     }
 
-    @Operation(summary = "Buscar lotes por distrito", description = "Filtra los lotes activos según el nombre del distrito.")
-    @ApiResponse(responseCode = "200", description = "Listado de lotes filtrados por distrito")
-    @GetMapping("/buscar/distrito")
-    public ResponseEntity<List<LoteResponseDTO>> buscarPorDistrito(@RequestParam String nombre) {
-        return ResponseEntity.ok(loteService.buscarPorDistrito(nombre));
+    @Operation(summary = "Listar lotes disponibles (filtrado por proyecto)", description = "Devuelve una lista de todos los lotes disponibles, opcionalmente filtrados por ID de Proyecto.")
+    @ApiResponse(responseCode = "200", description = "Listado de lotes disponibles")
+    @GetMapping("/disponibles")
+    public ResponseEntity<List<LoteResponseDTO>> listarDisponibles(
+            // 🟢 CORREGIDO: Usamos Optional para manejar la ausencia del parámetro
+            @RequestParam(required = false) Optional<UUID> proyectoId
+    ) {
+        // 🟢 Llamamos al método de servicio modificado
+        return ResponseEntity.ok(loteService.listarDisponibles(proyectoId));
+    }
+
+    // 🟢 NUEVO ENDPOINT: Búsqueda por ID de Proyecto (Reemplaza las búsquedas por distrito)
+    @Operation(summary = "Buscar lotes por ID de proyecto", description = "Filtra los lotes activos por el identificador UUID del proyecto al que pertenecen.")
+    @GetMapping("/buscar/proyecto/{proyectoId}")
+    public ResponseEntity<List<LoteResponseDTO>> buscarPorProyectoId(@PathVariable UUID proyectoId) {
+        return ResponseEntity.ok(loteService.buscarPorProyectoId(proyectoId));
     }
 
     @Operation(summary = "Buscar lotes por estado", description = "Filtra los lotes activos según el estado.")
@@ -84,25 +110,11 @@ public class LoteController {
         return ResponseEntity.ok(loteService.buscarPorEstado(estado));
     }
 
-    @Operation(summary = "Buscar lotes por ID de distrito", description = "Filtra los lotes activos por el identificador UUID del distrito.")
-    @GetMapping("/buscar/distrito/id")
-    public ResponseEntity<List<LoteResponseDTO>> buscarPorDistritoId(@RequestParam UUID distritoId) {
-        return ResponseEntity.ok(loteService.buscarPorDistritoId(distritoId));
-    }
-
     @GetMapping
     @Operation(summary = "Listar lotes con paginación", description = "Obtiene los lotes activos paginados.")
     public ResponseEntity<Page<LoteResponseDTO>> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(loteService.listarLotesPaginados(page, size));
-    }
-
-    @Operation(summary = "Eliminar un lote (lógicamente)", description = "Marca un lote como inactivo.")
-    @ApiResponse(responseCode = "204", description = "Lote eliminado exitosamente")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
-        loteService.eliminarLote(id);
-        return ResponseEntity.noContent().build();
     }
 }

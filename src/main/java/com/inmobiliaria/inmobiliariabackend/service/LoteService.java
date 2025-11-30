@@ -2,20 +2,14 @@ package com.inmobiliaria.inmobiliariabackend.service;
 
 import com.inmobiliaria.inmobiliariabackend.dto.LoteRequestDTO;
 import com.inmobiliaria.inmobiliariabackend.dto.LoteResponseDTO;
-import com.inmobiliaria.inmobiliariabackend.model.Distrito;
-import com.inmobiliaria.inmobiliariabackend.model.EstadoLote;
-import com.inmobiliaria.inmobiliariabackend.model.Lote;
-import com.inmobiliaria.inmobiliariabackend.repository.DistritoRepository;
-import com.inmobiliaria.inmobiliariabackend.repository.EstadoLoteRepository;
-import com.inmobiliaria.inmobiliariabackend.repository.LoteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.inmobiliaria.inmobiliariabackend.model.*;
+import com.inmobiliaria.inmobiliariabackend.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -27,22 +21,31 @@ public class LoteService {
 
     private final LoteRepository loteRepository;
     private final EstadoLoteRepository estadoLoteRepository;
-    private final DistritoRepository distritoRepository;
+    private final ProyectoRepository proyectoRepository;
+    private final VentaRepository ventaRepository;
+    private final EstadoVentaRepository estadoVentaRepository;
 
-    public LoteService(LoteRepository loteRepository, EstadoLoteRepository estadoLoteRepository, DistritoRepository distritoRepository) {
+    public LoteService(LoteRepository loteRepository, EstadoLoteRepository estadoLoteRepository, ProyectoRepository proyectoRepository, VentaRepository ventaRepository, EstadoVentaRepository estadoVentaRepository) {
         this.loteRepository = loteRepository;
         this.estadoLoteRepository = estadoLoteRepository;
-        this.distritoRepository = distritoRepository;
+        this.proyectoRepository = proyectoRepository;
+        this.ventaRepository = ventaRepository;
+        this.estadoVentaRepository = estadoVentaRepository;
     }
 
-    public LoteResponseDTO guardarLote(LoteRequestDTO dto) {
-        Distrito distrito = distritoRepository.findById(dto.getDistritoId())
-                .orElseThrow(() -> new IllegalArgumentException("Distrito no encontrado"));
+    // ----------------------------------------------------------------------
+    // CRUD
+    // ----------------------------------------------------------------------
 
-        // ✨ Nuevo: Validar unicidad del nombre del lote por distrito
-        Optional<Lote> loteExistente = loteRepository.findByNombreAndDistrito(dto.getNombre(), distrito);
+    public LoteResponseDTO guardarLote(LoteRequestDTO dto) {
+        // Buscamos el Proyecto (usando el proyectoId del DTO)
+        Proyecto proyecto = proyectoRepository.findById(dto.getProyectoId())
+                .orElseThrow(() -> new IllegalArgumentException("Proyecto no encontrado"));
+
+        // Validación de unicidad del nombre del lote por PROYECTO
+        Optional<Lote> loteExistente = loteRepository.findByNombreAndProyecto(dto.getNombre(), proyecto);
         if (loteExistente.isPresent() && loteExistente.get().getFechaEliminacion() == null) {
-            throw new IllegalArgumentException("Ya existe un lote con este nombre en el distrito especificado.");
+            throw new IllegalArgumentException("Ya existe un lote con este nombre en el proyecto especificado.");
         }
 
         Lote lote = new Lote();
@@ -50,18 +53,37 @@ public class LoteService {
         return mapearLoteADto(loteRepository.save(lote));
     }
 
+    private UUID obtenerIdEstadoVenta(String nombre) {
+        return estadoVentaRepository.findByNombre(nombre)
+                .orElseThrow(() -> new IllegalStateException("Estado de venta '" + nombre + "' no encontrado."))
+                .getEstadoVentaId();
+    }
+
     public LoteResponseDTO actualizarLote(UUID id, LoteRequestDTO dto) {
+
+        final UUID ESTADO_VENTA_CANCELADA_ID = obtenerIdEstadoVenta("Cancelada");
+
+        Optional<Venta> ventaAsociada = ventaRepository.findByLoteLoteIdAndFechaEliminacionIsNullAndEstadoVenta_EstadoVentaIdIsNot(
+                id,
+                ESTADO_VENTA_CANCELADA_ID
+        );
+        if (ventaAsociada.isPresent()) {
+            throw new IllegalArgumentException("No se puede actualizar el lote porque está asociado a una venta.");
+        }
+
         Lote lote = loteRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Lote no encontrado"));
 
-        Distrito nuevoDistrito = distritoRepository.findById(dto.getDistritoId())
-                .orElseThrow(() -> new IllegalArgumentException("Distrito no encontrado"));
+        // Buscamos el nuevo Proyecto
+        Proyecto nuevoProyecto = proyectoRepository.findById(dto.getProyectoId())
+                .orElseThrow(() -> new IllegalArgumentException("Proyecto no encontrado"));
 
-        // ✨ Nuevo: Validar unicidad para la actualización
-        if (!dto.getNombre().equalsIgnoreCase(lote.getNombre()) || !nuevoDistrito.equals(lote.getDistrito())) {
-            Optional<Lote> loteExistente = loteRepository.findByNombreAndDistrito(dto.getNombre(), nuevoDistrito);
+        // Validación de unicidad para la actualización por PROYECTO
+        if (!dto.getNombre().equalsIgnoreCase(lote.getNombre()) || !nuevoProyecto.equals(lote.getProyecto())) {
+            Optional<Lote> loteExistente = loteRepository.findByNombreAndProyecto(dto.getNombre(), nuevoProyecto);
+            // Comprobamos que el lote existente no sea el mismo que estamos actualizando
             if (loteExistente.isPresent() && loteExistente.get().getFechaEliminacion() == null && !loteExistente.get().getLoteId().equals(id)) {
-                throw new IllegalArgumentException("Ya existe un lote con este nombre en el distrito especificado.");
+                throw new IllegalArgumentException("Ya existe un lote con este nombre en el proyecto especificado.");
             }
         }
 
@@ -71,42 +93,60 @@ public class LoteService {
 
     public LoteResponseDTO obtenerPorId(UUID id) {
         Lote lote = loteRepository.findById(id)
-                .filter(l -> l.getFechaEliminacion() == null) // ✨ Filtrar por borrado lógico
+                .filter(l -> l.getFechaEliminacion() == null)
                 .orElseThrow(() -> new IllegalArgumentException("Lote no encontrado"));
         return mapearLoteADto(lote);
     }
 
+    // ----------------------------------------------------------------------
+    // LISTADO Y BÚSQUEDA
+    // ----------------------------------------------------------------------
+
     public List<LoteResponseDTO> listarActivos() {
-        // ✨ Usar el nuevo método del repositorio
         return loteRepository.findByFechaEliminacionIsNull().stream()
                 .map(this::mapearLoteADto)
                 .collect(Collectors.toList());
     }
 
-    public List<LoteResponseDTO> buscarPorDistrito(String nombreDistrito) {
-        // ✨ Usar el nuevo método del repositorio
-        return loteRepository.findByDistritoNombreContainingIgnoreCaseAndFechaEliminacionIsNull(nombreDistrito).stream()
+    /**
+     * Obtiene lotes disponibles, opcionalmente filtrados por Proyecto.
+     * @param proyectoId (Opcional) ID del proyecto a filtrar.
+     * @return Lista de LoteResponseDTO disponibles.
+     */
+    // 🟢 MODIFICADO: Unificamos la lógica de listar disponibles con el filtro de proyecto
+    public List<LoteResponseDTO> listarDisponibles(Optional<UUID> proyectoId) {
+        final String ESTADO_DISPONIBLE = "Disponible";
+
+        List<Lote> lotes;
+        if (proyectoId.isPresent()) {
+            // Buscamos disponibles Y por Proyecto
+            lotes = loteRepository.findByFechaEliminacionIsNullAndEstadoLote_NombreAndProyecto_ProyectoId(ESTADO_DISPONIBLE, proyectoId.get());
+        } else {
+            // Buscamos solo disponibles (todos)
+            lotes = loteRepository.findByFechaEliminacionIsNullAndEstadoLote_Nombre(ESTADO_DISPONIBLE);
+        }
+
+        return lotes.stream()
+                .map(this::mapearLoteADto)
+                .collect(Collectors.toList());
+    }
+
+    // 🟢 NOTA: El método 'buscarPorProyectoId' que solo busca por Activos (no necesariamente Disponibles)
+    // se mantiene si lo usas en otro contexto.
+    public List<LoteResponseDTO> buscarPorProyectoId(UUID proyectoId) {
+        return loteRepository.findByProyectoProyectoIdAndFechaEliminacionIsNull(proyectoId).stream()
                 .map(this::mapearLoteADto)
                 .collect(Collectors.toList());
     }
 
     public List<LoteResponseDTO> buscarPorEstado(String estado) {
-        // ✨ Usar el nuevo método del repositorio
         return loteRepository.findByEstadoLoteNombreIgnoreCaseAndFechaEliminacionIsNull(estado).stream()
-                .map(this::mapearLoteADto)
-                .collect(Collectors.toList());
-    }
-
-    public List<LoteResponseDTO> buscarPorDistritoId(UUID distritoId) {
-        // ✨ Usar el nuevo método del repositorio
-        return loteRepository.findByDistritoDistritoIdAndFechaEliminacionIsNull(distritoId).stream()
                 .map(this::mapearLoteADto)
                 .collect(Collectors.toList());
     }
 
     public Page<LoteResponseDTO> listarLotesPaginados(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        // ✨ Usar el nuevo método del repositorio
         Page<Lote> lotePage = loteRepository.findByFechaEliminacionIsNull(pageable);
 
         List<LoteResponseDTO> loteDTOs = lotePage.stream()
@@ -118,11 +158,15 @@ public class LoteService {
 
     public void eliminarLote(UUID id) {
         loteRepository.findById(id).ifPresent(lote -> {
-            // ✨ Borrado lógico
+            // Borrado lógico
             lote.setFechaEliminacion(LocalDateTime.now());
             loteRepository.save(lote);
         });
     }
+
+    // ----------------------------------------------------------------------
+    // MAPEO
+    // ----------------------------------------------------------------------
 
     private void mapearDtoALote(LoteRequestDTO dto, Lote lote) {
         lote.setNombre(dto.getNombre());
@@ -135,13 +179,18 @@ public class LoteService {
                 .orElseThrow(() -> new IllegalArgumentException("EstadoLote no encontrado"));
         lote.setEstadoLote(estado);
 
-        Distrito distrito = distritoRepository.findById(dto.getDistritoId())
-                .orElseThrow(() -> new IllegalArgumentException("Distrito no encontrado"));
-        lote.setDistrito(distrito);
-        // ✨ La propiedad activo ya no se mapea desde el DTO
+        Proyecto proyecto = proyectoRepository.findById(dto.getProyectoId())
+                .orElseThrow(() -> new IllegalArgumentException("Proyecto no encontrado"));
+        lote.setProyecto(proyecto);
     }
 
     private LoteResponseDTO mapearLoteADto(Lote lote) {
+        // La ubicación se accede a través de la jerarquía: Lote -> Proyecto -> Distrito
+        Proyecto proyecto = lote.getProyecto();
+        Distrito distrito = proyecto.getDistrito();
+        Provincia provincia = distrito.getProvincia();
+        Departamento departamento = provincia.getDepartamento();
+
         return new LoteResponseDTO(
                 lote.getLoteId(),
                 lote.getNombre(),
@@ -149,9 +198,18 @@ public class LoteService {
                 lote.getPrecio(),
                 lote.getArea(),
                 lote.getEstadoLote().getNombre(),
-                lote.getDistrito().getNombre(),
+                distrito.getNombre(), // Nombre del distrito (a través de Proyecto)
                 lote.getDireccion(),
-                lote.getFechaEliminacion() == null // ✨ Se calcula a partir de fechaEliminacion
+                lote.getFechaEliminacion() == null,
+
+                // CAMPOS DE PROYECTO AÑADIDOS AL DTO
+                proyecto.getProyectoId(),
+                proyecto.getNombre(),
+
+                // Información geográfica mantenida
+                distrito.getDistritoId(),
+                provincia.getProvinciaId(),
+                departamento.getDepartamentoId()
         );
     }
 }
