@@ -11,4 +11,5 @@ public interface DistritoRepository extends JpaRepository<Distrito, UUID> {
     Optional<Distrito> findByNombre(String nombre);
     // ✨ Nuevo: Buscar distritos activos por nombre, insensible a mayúsculas
     List<Distrito> findByNombreContainingIgnoreCaseAndActivoTrue(String nombre);
+    List<Distrito> findByProvincia_ProvinciaIdAndActivoTrue(UUID provinciaId);
 }

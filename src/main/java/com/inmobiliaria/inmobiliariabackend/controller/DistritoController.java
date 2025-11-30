@@ -39,4 +39,16 @@ public class DistritoController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/provincia/{provinciaId}")
+    @Operation(summary = "Obtener distritos por ID de Provincia", description = "Obtiene todos los distritos que pertenecen a una provincia específica.")
+    public ResponseEntity<List<Distrito>> obtenerPorProvinciaId(@PathVariable UUID provinciaId) {
+        // Asumiendo que tu DistritoService tiene el método buscarPorProvinciaId
+        List<Distrito> distritos = distritoService.buscarPorProvinciaId(provinciaId);
+
+        if (distritos.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(distritos);
+    }
 }

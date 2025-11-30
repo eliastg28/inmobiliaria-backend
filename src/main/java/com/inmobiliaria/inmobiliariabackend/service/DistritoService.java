@@ -39,4 +39,10 @@ public class DistritoService {
     public List<Distrito> buscarPorNombre(String nombre) {
         return distritoRepository.findByNombreContainingIgnoreCaseAndActivoTrue(nombre);
     }
+
+    public List<Distrito> buscarPorProvinciaId(UUID provinciaId) {
+        // Asumiendo que Provincia es una relación dentro de Distrito
+        // y que queremos solo los activos.
+        return distritoRepository.findByProvincia_ProvinciaIdAndActivoTrue(provinciaId);
+    }
 }
