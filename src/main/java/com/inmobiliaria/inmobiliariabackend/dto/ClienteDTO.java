@@ -13,8 +13,5 @@ public class ClienteDTO {
     private String numeroDocumento;
     private String correo;
     private String telefono;
-    private Integer visitasRealizadas;
-    private Integer llamadasNoAtendidas;
-    private Integer diasDesdeUltimaVisita;
     private Double ingresosMensuales;
 }

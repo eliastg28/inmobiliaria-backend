@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid; // ✨ Para validar DTO con anotaciones
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Tag(name = "Clientes", description = "Operaciones relacionadas con clientes")
 @RestController
 @RequestMapping("/api/clientes")
-@CrossOrigin(origins = "*") // Puedes restringirlo si lo deseas
+@CrossOrigin(origins = "*") // ✨ Ajusta esto si quieres restringir por dominio
 public class ClienteController {
 
     private final ClienteService clienteService;
@@ -41,7 +42,7 @@ public class ClienteController {
 
     @PostMapping
     @Operation(summary = "Crear cliente", description = "Crea un nuevo cliente")
-    public ResponseEntity<?> crear(@RequestBody ClienteDTO dto) { // ✨ CORREGIDO: Usar DTO
+    public ResponseEntity<?> crear(@Valid @RequestBody ClienteDTO dto) { // ✨ Usar @Valid para validar DTO
         try {
             Cliente creado = clienteService.crearCliente(dto);
             return ResponseEntity
@@ -54,17 +55,19 @@ public class ClienteController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar cliente", description = "Actualiza un cliente existente")
-    public ResponseEntity<?> actualizar(@PathVariable UUID id, @RequestBody ClienteDTO dto) { // ✨ CORREGIDO: Usar DTO
+    public ResponseEntity<?> actualizar(@PathVariable UUID id, @Valid @RequestBody ClienteDTO dto) {
         try {
             Cliente actualizado = clienteService.actualizarCliente(id, dto);
-            return actualizado != null ? ResponseEntity.ok(actualizado) : ResponseEntity.notFound().build();
+            return actualizado != null
+                    ? ResponseEntity.ok(actualizado)
+                    : ResponseEntity.notFound().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar cliente", description = "Elimina un cliente (lógicamente)")
+    @Operation(summary = "Eliminar cliente", description = "Elimina un cliente (borrado lógico)")
     public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
         clienteService.eliminarCliente(id);
         return ResponseEntity.noContent().build();

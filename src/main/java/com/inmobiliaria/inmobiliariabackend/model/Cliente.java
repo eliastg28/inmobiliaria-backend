@@ -10,10 +10,9 @@ import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-import java.time.LocalDate;
 import java.util.UUID;
 
-@EqualsAndHashCode(callSuper = true) // ✨ Nuevo: Asegura que equals/hashCode consideren campos de la clase padre
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "clientes", schema = "crm")
 @Data
@@ -57,11 +56,5 @@ public class Cliente extends Auditable {
     @Size(max = 20)
     private String telefono;
 
-    private Integer visitasRealizadas;
-    private Integer llamadasNoAtendidas;
-    private Integer diasDesdeUltimaVisita;
     private Double ingresosMensuales;
-
-    private LocalDate fechaRegistro;
-
 }
