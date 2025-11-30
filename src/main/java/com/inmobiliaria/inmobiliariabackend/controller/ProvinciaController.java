@@ -39,4 +39,16 @@ public class ProvinciaController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/departamento/{departamentoId}")
+    @Operation(summary = "Obtener provincias por ID de Departamento", description = "Obtiene todas las provincias que pertenecen a un departamento específico.")
+    public ResponseEntity<List<Provincia>> obtenerPorDepartamentoId(@PathVariable UUID departamentoId) {
+        // Asumiendo que tu ProvinciaService tiene el método buscarPorDepartamentoId
+        List<Provincia> provincias = provinciaService.buscarPorDepartamentoId(departamentoId);
+
+        if (provincias.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(provincias);
+    }
 }

@@ -39,4 +39,10 @@ public class ProvinciaService {
     public List<Provincia> buscarPorNombre(String nombre) {
         return provinciaRepository.findByNombreContainingIgnoreCaseAndActivoTrue(nombre);
     }
+
+    public List<Provincia> buscarPorDepartamentoId(UUID departamentoId) {
+        // Delega la búsqueda al repositorio, asumiendo que la Provincia tiene un campo 'departamentoId'
+        // y se filtran por el estado activo.
+        return provinciaRepository.findByDepartamento_DepartamentoIdAndActivoTrue(departamentoId);
+    }
 }

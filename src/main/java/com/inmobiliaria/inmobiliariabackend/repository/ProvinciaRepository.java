@@ -12,4 +12,5 @@ public interface ProvinciaRepository extends JpaRepository<Provincia, UUID> {
     Optional<Provincia> findByNombre(String nombre);
     // ✨ Nuevo: Buscar provincias activas por nombre, insensible a mayúsculas
     List<Provincia> findByNombreContainingIgnoreCaseAndActivoTrue(String nombre);
+    List<Provincia> findByDepartamento_DepartamentoIdAndActivoTrue(UUID departamentoId);
 }
