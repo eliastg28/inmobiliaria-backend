@@ -1,7 +1,5 @@
 package com.inmobiliaria.inmobiliariabackend.security;
 
-import com.inmobiliaria.inmobiliariabackend.service.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +32,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // ✅ No declaramos @Bean para JwtFilter porque ahora es un @Component
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
         return http
@@ -47,7 +46,8 @@ public class SecurityConfig {
                         "/v3/api-docs/**",
                         "/api-docs/**",
                         "/swagger-resources/**",
-                        "/webjars/**").permitAll()
+                        "/webjars/**"
+                ).permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -56,14 +56,14 @@ public class SecurityConfig {
                 .build();
     }
 
-    @Value("${frontend.url}") // <-- variable de entorno
+    @Value("${frontend.url}")
     private String frontendUrl;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(frontendUrl));
-        configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
@@ -71,10 +71,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
-    @Bean
-    public JwtFilter jwtFilter(UserDetailsService userDetailsService, JwtUtil jwtUtil) {
-        return new JwtFilter(userDetailsService, jwtUtil);
-    }
 }
-
