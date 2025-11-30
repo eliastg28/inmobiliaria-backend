@@ -15,11 +15,16 @@ public class VentaResponseDTO {
     private String clienteNombreCompleto;
     private UUID loteId;
     private String loteNombre;
+    private UUID proyectoId;
+    private String proyectoNombre;
     private UUID estadoVentaId;
     private String estadoVentaNombre;
     private UUID monedaId;
     private String monedaNombre;
-    private LocalDate fechaVenta;
+    private LocalDate fechaContrato;
+    private Integer nroCuotas;
     private Double montoTotal;
+    private Double montoAbonado;
+    private Double saldoPendiente;
     private Boolean activo;
 }

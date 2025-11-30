@@ -11,4 +11,8 @@ public interface VentaRepository extends JpaRepository<Venta, UUID> {
     List<Venta> findByFechaEliminacionIsNull();
 
     Optional<Venta> findByLoteLoteIdAndFechaEliminacionIsNull(UUID loteId);
+    Optional<Venta> findByLoteLoteIdAndFechaEliminacionIsNullAndEstadoVenta_EstadoVentaIdIsNot(
+            UUID loteId,
+            UUID estadoVentaId
+    );
 }
