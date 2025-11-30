@@ -35,7 +35,7 @@ public class DataSeeder implements CommandLineRunner {
     private final UsuarioRolRepository usuarioRolRepository;
     private final UsuarioRepository usuarioRepository;
     private final LoteRepository loteRepository;
-    private final VentaRepository ventaRepository;
+    private final ProyectoRepository proyectoRepository;
 
     public DataSeeder(
             DepartamentoRepository departamentoRepository,
@@ -51,7 +51,7 @@ public class DataSeeder implements CommandLineRunner {
             UsuarioRepository usuarioRepository,
             PasswordEncoder passwordEncoder,
             LoteRepository loteRepository,
-            VentaRepository ventaRepository) {
+            ProyectoRepository proyectoRepository) {
         this.departamentoRepository = departamentoRepository;
         this.provinciaRepository = provinciaRepository;
         this.distritoRepository = distritoRepository;
@@ -65,7 +65,7 @@ public class DataSeeder implements CommandLineRunner {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.loteRepository = loteRepository;
-        this.ventaRepository = ventaRepository;
+        this.proyectoRepository = proyectoRepository;
     }
 
     @Override
@@ -93,8 +93,8 @@ public class DataSeeder implements CommandLineRunner {
         seedDepartamentos();
         seedProvincias();
         seedAllDistritos();
+        seedProyectos();
         seedLotes();
-        seedVentas();
 
         System.out.println("✅ DataSeeder finalizado.");
     }
@@ -124,11 +124,7 @@ public class DataSeeder implements CommandLineRunner {
             c1.setNumeroDocumento("12345678");
             c1.setCorreo("juan.perez@example.com");
             c1.setTelefono("987654321");
-            c1.setVisitasRealizadas(2);
-            c1.setLlamadasNoAtendidas(1);
-            c1.setDiasDesdeUltimaVisita(5);
             c1.setIngresosMensuales(2500.00);
-            c1.setFechaRegistro(LocalDate.now());
 
             Cliente c2 = new Cliente();
             c2.setPrimerNombre("María");
@@ -139,11 +135,7 @@ public class DataSeeder implements CommandLineRunner {
             c2.setNumeroDocumento("87654321");
             c2.setCorreo("maria.lopez@example.com");
             c2.setTelefono("912345678");
-            c2.setVisitasRealizadas(0);
-            c2.setLlamadasNoAtendidas(0);
-            c2.setDiasDesdeUltimaVisita(0);
             c2.setIngresosMensuales(3100.00);
-            c2.setFechaRegistro(LocalDate.now());
 
             clienteRepository.saveAll(Arrays.asList(c1, c2));
             System.out.println("✅ Clientes de prueba insertados en crm.clientes");
@@ -4379,27 +4371,47 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
+    private void seedProyectos() {
+        if (proyectoRepository.count() == 0) {
+            // 1. Buscar el Distrito necesario
+            Distrito distritoPacasmayo = distritoRepository.findByNombre("Pacasmayo")
+                    .orElseThrow(() -> new RuntimeException("Distrito 'Pacasmayo' no encontrado. Asegúrate de que los Distritos se siembran primero."));
+
+            // 2. Crear el Proyecto
+            Proyecto elEden = new Proyecto();
+            elEden.setNombre("El Eden");
+            elEden.setDescripcion("El primer proyecto residencial en Pacasmayo.");
+            elEden.setDistrito(distritoPacasmayo);
+
+            proyectoRepository.save(elEden);
+
+            System.out.println("✅ Proyecto 'El Eden' insertado correctamente.");
+        } else {
+            System.out.println("ℹ️ Proyectos ya existen en la base de datos, no se insertaron nuevos.");
+        }
+    }
+
     private void seedLotes() {
         if (loteRepository.count() == 0) {
-            // Estados de lote posibles (asegúrate de que estén sembrados antes)
+            // 1. Buscar el Estado de Lote necesario
             EstadoLote disponible = estadoLoteRepository.findByNombre("Disponible")
                     .orElseThrow(() -> new RuntimeException("EstadoLote 'Disponible' no encontrado"));
 
-            // Ejemplo: tomar un distrito existente (puedes variar esto según tu seed de distritos)
-            Distrito distrito = distritoRepository.findByNombre("Pacasmayo")
-                    .orElseThrow(() -> new RuntimeException("Distrito 'Pacasmayo' no encontrado"));
-
+            // 🟢 NUEVO: Buscar el Proyecto "El Edén"
+            Proyecto proyectoElEden = proyectoRepository.findByNombre("El Eden")
+                    .orElseThrow(() -> new RuntimeException("Proyecto 'El Eden' no encontrado. Asegúrate de ejecutar seedProyectos primero."));
 
 
             for (int i = 1; i <= 10; i++) {
 
                 Lote lote = new Lote();
                 lote.setNombre("Lote " + i);
-                lote.setDescripcion("Lote número " + i);
+                lote.setDescripcion("Lote número " + i + " en el proyecto " + proyectoElEden.getNombre());
                 lote.setPrecio(1000.0 * i);
-                lote.setArea(120.0 + (i * 10)); // Ejemplo de áreas diferentes
+                lote.setArea(120.0 + (i * 10));
                 lote.setEstadoLote(disponible);
-                lote.setDistrito(distrito);
+                lote.setProyecto(proyectoElEden);
+
                 lote.setDireccion("Mz " + i + " Lt " + (i + 10));
 
                 loteRepository.save(lote);
@@ -4407,58 +4419,6 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("✅ Lotes insertados correctamente");
         } else {
             System.out.println("ℹ️ Lotes ya existen en la base de datos, no se insertaron nuevos.");
-        }
-    }
-
-    private void seedVentas() {
-        // Verificar si ya existen ventas activas para evitar duplicados
-        if (ventaRepository.findByFechaEliminacionIsNull().isEmpty()) {
-            try {
-                // 1. Buscar un cliente con el número de documento y el tipo de documento.
-                //    Necesitas el ID del TipoDocumento para una búsqueda precisa.
-                //    Asumo que ya existe un tipo de documento con el nombre "DNI".
-                TipoDocumento dni = tipoDocumentoRepository.findByNombre("DNI")
-                        .orElseThrow(() -> new RuntimeException("TipoDocumento 'DNI' no encontrado."));
-
-                Cliente cliente = clienteRepository.findByNumeroDocumentoAndTipoDocumento("12345678", dni)
-                        .orElseThrow(() -> new RuntimeException("Cliente con documento '12345678' no encontrado."));
-
-                // 2. Buscar un lote de prueba con el nombre y el distrito.
-                //    Asumo que ya existe un distrito con el nombre "Miraflores".
-                Distrito miraflores = distritoRepository.findByNombre("Pacasmayo")
-                        .orElseThrow(() -> new RuntimeException("Distrito 'Pacasmayo' no encontrado."));
-
-                Lote lote = loteRepository.findByNombreAndDistrito("Lote 1", miraflores)
-                        .orElseThrow(() -> new RuntimeException("Lote 'Lote 1' no encontrado."));
-
-                // 3. Buscar el estado de venta "Pendiente"
-                EstadoVenta estadoVenta = estadoVentaRepository.findByNombre("Pendiente")
-                        .orElseThrow(() -> new RuntimeException("EstadoVenta 'Pendiente' no encontrado."));
-
-                // 4. Buscar la moneda "Sol"
-                Moneda moneda = monedaRepository.findByNombre("Sol")
-                        .orElseThrow(() -> new RuntimeException("Moneda 'Sol' no encontrada."));
-
-                // 5. Crear la venta de prueba y mapear el DTO
-                Venta nuevaVenta = new Venta();
-                nuevaVenta.setCliente(cliente);
-                nuevaVenta.setLote(lote);
-                nuevaVenta.setEstadoVenta(estadoVenta);
-                nuevaVenta.setMoneda(moneda);
-                nuevaVenta.setFechaVenta(LocalDate.now());
-                nuevaVenta.setMontoTotal(150000.00);
-
-                // La propiedad 'activo' ahora se gestiona internamente por la clase Auditable
-                // no es necesario pasarla en el constructor ni establecerla.
-
-                ventaRepository.save(nuevaVenta);
-                System.out.println("✅ Venta de prueba insertada en ventas.ventas");
-
-            } catch (RuntimeException e) {
-                System.err.println("❌ Error al insertar la venta: " + e.getMessage());
-            }
-        } else {
-            System.out.println("ℹ️ Ya existen ventas activas, no se insertaron duplicados.");
         }
     }
 }
