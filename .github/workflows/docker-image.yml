@@ -9,9 +9,7 @@ on:
 
 jobs:
   build-and-push:
-    # SOLO cuando:
-    # - el PR fue mergeado
-    # - viene desde develop hacia main
+    # Solo si el PR fue mergeado de develop a main
     if: |
       github.event.pull_request.merged == true &&
       github.event.pull_request.base.ref == 'main' &&
@@ -23,16 +21,17 @@ jobs:
       - name: 📥 Checkout código
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # NECESARIO para versionamiento semántico
+          fetch-depth: 0
 
-      # 🔢 Generar versión semántica
-      - name: 🔢 Generar versión
+      # 🔢 Generar versión (Copiado de tu lógica funcional)
+      - name: 🔢 Generar versión semántica
         id: version
-        uses: PaulHatch/semantic-version@v4
+        uses: PaulHatch/semantic-version@v4.0.3
         with:
           major_pattern: "major:"
           minor_pattern: "feat:"
-          format: "${major}.${minor}.${patch}"
+          # Usamos el incremento para que la versión cambie aunque no haya feat:
+          format: "${major}.${minor}.${patch}-v${increment}"
 
       - name: ☕ Configurar JDK 11
         uses: actions/setup-java@v3
@@ -44,17 +43,22 @@ jobs:
         run: mvn clean package -DskipTests
 
       - name: 🔑 Docker Login
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
 
       - name: 🐳 Build & Push Docker Image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/inmobiliaria-backend:${{ steps.version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/inmobiliaria-backend:latest
+        env:
+          DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "📌 Construyendo versión: $NEW_VERSION"
+          
+          # Construir la imagen con el tag de versión y el tag latest
+          docker build -t "$DOCKER_USER/inmobiliaria-backend:$NEW_VERSION" .
+          docker tag "$DOCKER_USER/inmobiliaria-backend:$NEW_VERSION" "$DOCKER_USER/inmobiliaria-backend:latest"
+
+          echo "🚀 Subiendo a Docker Hub..."
+          docker push "$DOCKER_USER/inmobiliaria-backend:$NEW_VERSION"
+          docker push "$DOCKER_USER/inmobiliaria-backend:latest"
