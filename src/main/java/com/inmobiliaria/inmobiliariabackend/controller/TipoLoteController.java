@@ -27,8 +27,8 @@ public class TipoLoteController {
 
     @GetMapping
     @Operation(summary = "Listar tipos de lote", description = "Obtiene todos los tipos de lote activos")
-    public ResponseEntity<List<TipoLote>> listar() {
-        return ResponseEntity.ok(service.listar());
+    public ResponseEntity<List<TipoLote>> listar(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(service.listar(search));
     }
 
     @GetMapping("/{id}")
