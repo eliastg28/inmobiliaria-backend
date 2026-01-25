@@ -3,9 +3,11 @@ package com.inmobiliaria.inmobiliariabackend.service;
 import com.inmobiliaria.inmobiliariabackend.dto.EstadoVentaDTO;
 import com.inmobiliaria.inmobiliariabackend.model.EstadoVenta;
 import com.inmobiliaria.inmobiliariabackend.repository.EstadoVentaRepository;
+import com.inmobiliaria.inmobiliariabackend.util.TextUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,11 +22,25 @@ public class EstadoVentaService {
         this.estadoVentaRepository = estadoVentaRepository;
     }
 
-    public List<EstadoVenta> listar() {
-        // ✨ Filtrar por fechaEliminacion
-        return estadoVentaRepository.findAll()
+    public List<EstadoVenta> listar(String busqueda) {
+        List<EstadoVenta> todos = estadoVentaRepository.findAll()
                 .stream()
                 .filter(estado -> estado.getFechaEliminacion() == null)
+                .collect(Collectors.toList());
+
+        if (busqueda == null || busqueda.trim().isEmpty()) return todos;
+
+        String busquedaLimpia = TextUtil.limpiarAcentos(busqueda);
+        String[] palabras = busquedaLimpia.split("\\s+");
+
+        return todos.stream()
+                .filter(e -> {
+                    String contenido = TextUtil.limpiarAcentos(
+                            (e.getNombre() != null ? e.getNombre() : "") + " " +
+                                    (e.getDescripcion() != null ? e.getDescripcion() : "")
+                    );
+                    return Arrays.stream(palabras).allMatch(p -> contenido.contains(p));
+                })
                 .collect(Collectors.toList());
     }
 

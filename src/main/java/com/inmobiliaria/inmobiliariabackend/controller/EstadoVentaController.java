@@ -27,8 +27,8 @@ public class EstadoVentaController {
 
     @GetMapping
     @Operation(summary = "Listar estados de venta", description = "Obtiene todos los estados de venta activos")
-    public ResponseEntity<List<EstadoVenta>> listar() {
-        return ResponseEntity.ok(estadoVentaService.listar());
+    public ResponseEntity<List<EstadoVenta>> listar(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(estadoVentaService.listar(search));
     }
 
     @GetMapping("/{id}")
