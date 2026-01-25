@@ -27,8 +27,8 @@ public class UsuarioRolController {
 
     @GetMapping
     @Operation(summary = "Listar roles de usuario", description = "Obtiene todos los roles de usuario activos")
-    public ResponseEntity<List<UsuarioRol>> listar() {
-        return ResponseEntity.ok(service.listar());
+    public ResponseEntity<List<UsuarioRol>> listar(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(service.listar(search));
     }
 
     @GetMapping("/{id}")

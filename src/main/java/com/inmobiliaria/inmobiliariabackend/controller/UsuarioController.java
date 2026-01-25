@@ -30,8 +30,8 @@ public class UsuarioController {
 
     @GetMapping
     @Operation(summary = "Listar usuarios", description = "Obtiene todos los usuarios activos")
-    public ResponseEntity<List<Usuario>> listar() {
-        return ResponseEntity.ok(usuarioService.listar());
+    public ResponseEntity<List<Usuario>> listar(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(usuarioService.listar(search));
     }
 
     @GetMapping("/{id}")
