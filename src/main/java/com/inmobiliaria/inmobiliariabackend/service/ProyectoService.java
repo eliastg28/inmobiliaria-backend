@@ -8,11 +8,13 @@ import com.inmobiliaria.inmobiliariabackend.model.Proyecto;
 import com.inmobiliaria.inmobiliariabackend.model.Provincia;
 import com.inmobiliaria.inmobiliariabackend.repository.DistritoRepository;
 import com.inmobiliaria.inmobiliariabackend.repository.ProyectoRepository;
+import com.inmobiliaria.inmobiliariabackend.util.TextUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -88,6 +90,24 @@ public class ProyectoService {
                     Proyecto proyecto = (Proyecto) result[0];
                     Long totalLotes = (Long) result[1];
                     return mapearProyectoADto(proyecto, totalLotes);
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<ProyectoResponseDTO> listarActivos(String busqueda) {
+        List<ProyectoResponseDTO> activos = listarActivos();
+        if (busqueda == null || busqueda.trim().isEmpty()) return activos;
+
+        String busquedaLimpia = TextUtil.limpiarAcentos(busqueda);
+        String[] palabras = busquedaLimpia.split("\\s+");
+
+        return activos.stream()
+                .filter(p -> {
+                    String contenido = TextUtil.limpiarAcentos(
+                            (p.getNombre() != null ? p.getNombre() : "") + " " +
+                                    (p.getDescripcion() != null ? p.getDescripcion() : "")
+                    );
+                    return Arrays.stream(palabras).allMatch(x -> contenido.contains(x));
                 })
                 .collect(Collectors.toList());
     }

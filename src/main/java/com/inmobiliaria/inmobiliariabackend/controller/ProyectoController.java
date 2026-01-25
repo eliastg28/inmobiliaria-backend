@@ -68,8 +68,8 @@ public class ProyectoController {
 
     @Operation(summary = "Listar todos los proyectos activos")
     @GetMapping
-    public ResponseEntity<List<ProyectoResponseDTO>> listarActivos() {
-        return ResponseEntity.ok(proyectoService.listarActivos());
+    public ResponseEntity<List<ProyectoResponseDTO>> listarActivos(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(proyectoService.listarActivos(search));
     }
 
     @Operation(summary = "Eliminar un proyecto (lógicamente)")
