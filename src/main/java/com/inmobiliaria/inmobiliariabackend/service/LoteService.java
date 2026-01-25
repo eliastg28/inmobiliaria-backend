@@ -4,6 +4,7 @@ import com.inmobiliaria.inmobiliariabackend.dto.LoteRequestDTO;
 import com.inmobiliaria.inmobiliariabackend.dto.LoteResponseDTO;
 import com.inmobiliaria.inmobiliariabackend.model.*;
 import com.inmobiliaria.inmobiliariabackend.repository.*;
+import com.inmobiliaria.inmobiliariabackend.util.TextUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -108,6 +109,25 @@ public class LoteService {
                 .collect(Collectors.toList());
     }
 
+    public List<LoteResponseDTO> listarActivos(String busqueda) {
+        List<LoteResponseDTO> todos = listarActivos();
+        if (busqueda == null || busqueda.trim().isEmpty()) return todos;
+
+        String busquedaLimpia = TextUtil.limpiarAcentos(busqueda);
+        String[] palabras = busquedaLimpia.split("\\s+");
+
+        return todos.stream().filter(dto -> {
+            String contenido = TextUtil.limpiarAcentos(
+                    (dto.getNombre() != null ? dto.getNombre() : "") + " " +
+                            (dto.getDescripcion() != null ? dto.getDescripcion() : "") + " " +
+                            (dto.getDireccion() != null ? dto.getDireccion() : "") + " " +
+                            (dto.getProyectoNombre() != null ? dto.getProyectoNombre() : "")  + " " +
+                            (dto.getEstadoLoteNombre() != null ? dto.getEstadoLoteNombre() : "")
+            );
+            return java.util.Arrays.stream(palabras).allMatch(p -> contenido.contains(p));
+        }).collect(Collectors.toList());
+    }
+
     /**
      * Obtiene lotes disponibles, opcionalmente filtrados por Proyecto.
      * @param proyectoId (Opcional) ID del proyecto a filtrar.
@@ -129,6 +149,24 @@ public class LoteService {
         return lotes.stream()
                 .map(this::mapearLoteADto)
                 .collect(Collectors.toList());
+    }
+
+    public List<LoteResponseDTO> listarDisponibles(Optional<UUID> proyectoId, String busqueda) {
+        List<LoteResponseDTO> todos = listarDisponibles(proyectoId);
+        if (busqueda == null || busqueda.trim().isEmpty()) return todos;
+
+        String busquedaLimpia = TextUtil.limpiarAcentos(busqueda);
+        String[] palabras = busquedaLimpia.split("\\s+");
+
+        return todos.stream().filter(dto -> {
+            String contenido = TextUtil.limpiarAcentos(
+                    (dto.getNombre() != null ? dto.getNombre() : "") + " " +
+                            (dto.getDescripcion() != null ? dto.getDescripcion() : "") + " " +
+                            (dto.getDireccion() != null ? dto.getDireccion() : "") + " " +
+                            (dto.getProyectoNombre() != null ? dto.getProyectoNombre() : "")
+            );
+            return java.util.Arrays.stream(palabras).allMatch(p -> contenido.contains(p));
+        }).collect(Collectors.toList());
     }
 
     // 🟢 NOTA: El método 'buscarPorProyectoId' que solo busca por Activos (no necesariamente Disponibles)
@@ -154,6 +192,17 @@ public class LoteService {
                 .collect(Collectors.toList());
 
         return new PageImpl<>(loteDTOs, pageable, lotePage.getTotalElements());
+    }
+
+    public Page<LoteResponseDTO> listarLotesPaginados(int page, int size, String busqueda) {
+        if (busqueda == null || busqueda.trim().isEmpty()) return listarLotesPaginados(page, size);
+
+        // Para un filtrado sencillo, obtenemos todos los activos, filtramos y luego paginamos en memoria
+        List<LoteResponseDTO> filtrados = listarActivos(busqueda);
+        int fromIndex = Math.min(page * size, filtrados.size());
+        int toIndex = Math.min(fromIndex + size, filtrados.size());
+        List<LoteResponseDTO> pageList = filtrados.subList(fromIndex, toIndex);
+        return new PageImpl<>(pageList, PageRequest.of(page, size), filtrados.size());
     }
 
     public void eliminarLote(UUID id) {

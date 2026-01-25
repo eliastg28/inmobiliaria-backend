@@ -81,8 +81,8 @@ public class LoteController {
     @Operation(summary = "Listar lotes activos", description = "Devuelve una lista de todos los lotes que están activos.")
     @ApiResponse(responseCode = "200", description = "Listado de lotes activos")
     @GetMapping("/activos")
-    public ResponseEntity<List<LoteResponseDTO>> listarActivos() {
-        return ResponseEntity.ok(loteService.listarActivos());
+    public ResponseEntity<List<LoteResponseDTO>> listarActivos(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(loteService.listarActivos(search));
     }
 
     @Operation(summary = "Listar lotes disponibles (filtrado por proyecto)", description = "Devuelve una lista de todos los lotes disponibles, opcionalmente filtrados por ID de Proyecto.")
@@ -90,10 +90,11 @@ public class LoteController {
     @GetMapping("/disponibles")
     public ResponseEntity<List<LoteResponseDTO>> listarDisponibles(
             // 🟢 CORREGIDO: Usamos Optional para manejar la ausencia del parámetro
-            @RequestParam(required = false) Optional<UUID> proyectoId
+            @RequestParam(required = false) Optional<UUID> proyectoId,
+            @RequestParam(required = false) String search
     ) {
         // 🟢 Llamamos al método de servicio modificado
-        return ResponseEntity.ok(loteService.listarDisponibles(proyectoId));
+        return ResponseEntity.ok(loteService.listarDisponibles(proyectoId, search));
     }
 
     // 🟢 NUEVO ENDPOINT: Búsqueda por ID de Proyecto (Reemplaza las búsquedas por distrito)
@@ -114,7 +115,8 @@ public class LoteController {
     @Operation(summary = "Listar lotes con paginación", description = "Obtiene los lotes activos paginados.")
     public ResponseEntity<Page<LoteResponseDTO>> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(loteService.listarLotesPaginados(page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(loteService.listarLotesPaginados(page, size, search));
     }
 }
