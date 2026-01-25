@@ -5,6 +5,7 @@ import com.inmobiliaria.inmobiliariabackend.model.Cliente;
 import com.inmobiliaria.inmobiliariabackend.model.TipoDocumento;
 import com.inmobiliaria.inmobiliariabackend.repository.ClienteRepository;
 import com.inmobiliaria.inmobiliariabackend.repository.TipoDocumentoRepository;
+import com.inmobiliaria.inmobiliariabackend.util.TextUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,10 +25,35 @@ public class ClienteService {
         this.tipoDocumentoRepository = tipoDocumentoRepository;
     }
 
-    public List<Cliente> listarClientes() {
-        return clienteRepository.findAll()
-                .stream()
-                .filter(cliente -> cliente.getFechaEliminacion() == null) // solo activos
+    public List<Cliente> listarClientes(String busqueda) {
+        // 1. Obtenemos todos los activos (ya tienes este método)
+        List<Cliente> todos = clienteRepository.findByFechaEliminacionIsNull();
+
+        if (busqueda == null || busqueda.trim().isEmpty()) {
+            return todos;
+        }
+
+        // 2. Normalizamos la búsqueda
+        String busquedaLimpia = TextUtil.limpiarAcentos(busqueda);
+        String[] palabras = busquedaLimpia.split("\\s+");
+
+        // 3. Filtramos TODO en memoria con TextUtil
+        return todos.stream()
+                .filter(c -> {
+                    String contenidoSocio = TextUtil.limpiarAcentos(
+                            (c.getPrimerNombre() != null ? c.getPrimerNombre() : "") + " " +
+                                    (c.getSegundoNombre() != null ? c.getSegundoNombre() : "") + " " +
+                                    (c.getApellidoPaterno() != null ? c.getApellidoPaterno() : "") + " " +
+                                    (c.getApellidoMaterno() != null ? c.getApellidoMaterno() : "") + " " +
+                                    (c.getNumeroDocumento() != null ? c.getNumeroDocumento() : "")
+                    );
+
+                    // Verificamos que todas las palabras de la búsqueda estén en el contenido
+                    for (String p : palabras) {
+                        if (!contenidoSocio.contains(p)) return false;
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
     }
 

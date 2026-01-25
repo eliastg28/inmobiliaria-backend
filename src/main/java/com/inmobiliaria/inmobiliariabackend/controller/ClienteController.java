@@ -28,8 +28,8 @@ public class ClienteController {
 
     @GetMapping
     @Operation(summary = "Listar clientes", description = "Obtiene todos los clientes activos")
-    public ResponseEntity<List<Cliente>> listarTodos() {
-        return ResponseEntity.ok(clienteService.listarClientes());
+    public ResponseEntity<List<Cliente>> listarTodos(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(clienteService.listarClientes(search));
     }
 
     @GetMapping("/{id}")
