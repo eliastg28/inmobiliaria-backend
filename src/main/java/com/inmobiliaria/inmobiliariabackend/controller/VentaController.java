@@ -27,8 +27,8 @@ public class VentaController {
 
     @GetMapping
     @Operation(summary = "Listar ventas", description = "Obtiene todas las ventas activas")
-    public ResponseEntity<List<VentaResponseDTO>> listar() {
-        return ResponseEntity.ok(ventaService.listar());
+    public ResponseEntity<List<VentaResponseDTO>> listar(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(ventaService.listar(search));
     }
 
     @GetMapping("/{id}")

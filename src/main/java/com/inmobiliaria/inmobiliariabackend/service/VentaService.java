@@ -4,6 +4,7 @@ import com.inmobiliaria.inmobiliariabackend.dto.VentaRequestDTO;
 import com.inmobiliaria.inmobiliariabackend.dto.VentaResponseDTO;
 import com.inmobiliaria.inmobiliariabackend.model.*;
 import com.inmobiliaria.inmobiliariabackend.repository.*;
+import com.inmobiliaria.inmobiliariabackend.util.TextUtil;
 import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import javax.persistence.EntityNotFoundException;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Arrays;
 
 @Service
 public class VentaService {
@@ -56,6 +58,27 @@ public class VentaService {
     public List<VentaResponseDTO> listar() {
         return ventaRepository.findByFechaEliminacionIsNull().stream()
                 .map(this::mapearVentaADto)
+                .collect(Collectors.toList());
+    }
+
+    public List<VentaResponseDTO> listar(String busqueda) {
+        List<VentaResponseDTO> todos = listar();
+        if (busqueda == null || busqueda.trim().isEmpty()) return todos;
+
+        String busquedaLimpia = TextUtil.limpiarAcentos(busqueda);
+        String[] palabras = busquedaLimpia.split("\\s+");
+
+        return todos.stream()
+                .filter(v -> {
+                    String contenido = TextUtil.limpiarAcentos(
+                            (v.getClienteNombreCompleto() != null ? v.getClienteNombreCompleto() : "") + " " +
+                                    (v.getLoteNombre() != null ? v.getLoteNombre() : "") + " " +
+                                    (v.getProyectoNombre() != null ? v.getProyectoNombre() : "") + " " +
+                                    (v.getClienteNombreCompleto() != null ? v.getClienteNombreCompleto() : "") + " " +
+                                    (v.getEstadoVentaNombre() != null ? v.getEstadoVentaNombre() : "")
+                    );
+                    return Arrays.stream(palabras).allMatch(p -> contenido.contains(p));
+                })
                 .collect(Collectors.toList());
     }
 
