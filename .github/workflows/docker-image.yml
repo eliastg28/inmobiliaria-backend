@@ -7,7 +7,7 @@ on:
     types:
       - closed
 
-# 🔑 ESTO ES LO QUE FALTA: Permiso para que el bot escriba en tu repo
+# 🔑 Permiso para que el bot escriba el TAG en tu repositorio
 permissions:
   contents: write
 
@@ -32,9 +32,12 @@ jobs:
         with:
           major_pattern: "major:"
           minor_pattern: "feat:"
+          patch_pattern: "fix:"
           format: "${major}.${minor}.${patch}-v${increment}"
           search_commit_body: true
           user_format_if_no_tag: true
+          # 🔥 ESTO ES LO QUE FALTA: Obliga a revisar cada commit individualmente
+          bump_each_commit: true
 
       - name: ☕ Configurar JDK 11
         uses: actions/setup-java@v3
@@ -56,16 +59,19 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
           NEW_VERSION: ${{ steps.version.outputs.version }}
         run: |
+          echo "📌 Construyendo versión: $NEW_VERSION"
           docker build -t "$DOCKER_USER/inmobiliaria-backend:$NEW_VERSION" .
           docker tag "$DOCKER_USER/inmobiliaria-backend:$NEW_VERSION" "$DOCKER_USER/inmobiliaria-backend:latest"
+          
+          echo "🚀 Subiendo a Docker Hub..."
           docker push "$DOCKER_USER/inmobiliaria-backend:$NEW_VERSION"
           docker push "$DOCKER_USER/inmobiliaria-backend:latest"
 
-      # 🏷️ ESTE PASO ACTUALIZARÁ TUS TAGS EN GIT
       - name: 🏷️ Push Git Tag
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # Creamos el tag con la versión calculada (ej. 1.1.0-v20)
           git tag ${{ steps.version.outputs.version }}
           git push origin ${{ steps.version.outputs.version }}
         env:
