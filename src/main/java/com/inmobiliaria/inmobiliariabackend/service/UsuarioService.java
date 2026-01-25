@@ -5,6 +5,7 @@ import com.inmobiliaria.inmobiliariabackend.model.Usuario;
 import com.inmobiliaria.inmobiliariabackend.model.UsuarioRol;
 import com.inmobiliaria.inmobiliariabackend.repository.UsuarioRepository;
 import com.inmobiliaria.inmobiliariabackend.repository.UsuarioRolRepository;
+import com.inmobiliaria.inmobiliariabackend.util.TextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +31,33 @@ public class UsuarioService {
     private PasswordEncoder passwordEncoder;
 
     private static final String ROL_PROPIETARIO = "PROPIETARIO";
+
+    public List<Usuario> listar(String busqueda) {
+        // Obtener el usuario autenticado para aplicar las reglas de visibilidad
+        String authenticatedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<Usuario> authenticatedUser = usuarioRepository.findByUsername(authenticatedUsername);
+
+        boolean isPropietario = authenticatedUser.isPresent() && authenticatedUser.get().getRoles().stream()
+                .anyMatch(rol -> ROL_PROPIETARIO.equals(rol.getNombre()));
+
+        List<Usuario> todos = usuarioRepository.findAll()
+                .stream()
+                .filter(usuario -> usuario.getFechaEliminacion() == null)
+                .filter(usuario -> isPropietario || usuario.getRoles().stream().noneMatch(rol -> ROL_PROPIETARIO.equals(rol.getNombre())))
+                .collect(Collectors.toList());
+
+        if (busqueda == null || busqueda.trim().isEmpty()) return todos;
+
+        String busquedaLimpia = TextUtil.limpiarAcentos(busqueda);
+        String[] palabras = busquedaLimpia.split("\\s+");
+
+        return todos.stream()
+                .filter(u -> {
+                    String contenido = TextUtil.limpiarAcentos(u.getUsername() != null ? u.getUsername() : "");
+                    return java.util.Arrays.stream(palabras).allMatch(p -> contenido.contains(p));
+                })
+                .collect(Collectors.toList());
+    }
 
     public List<Usuario> listar() {
         // Obtener el usuario autenticado para aplicar las reglas de visibilidad

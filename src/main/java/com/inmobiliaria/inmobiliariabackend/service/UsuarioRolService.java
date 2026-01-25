@@ -1,13 +1,14 @@
 package com.inmobiliaria.inmobiliariabackend.service;
 
 import com.inmobiliaria.inmobiliariabackend.dto.UsuarioRolDTO;
-import com.inmobiliaria.inmobiliariabackend.model.Usuario;
 import com.inmobiliaria.inmobiliariabackend.model.UsuarioRol;
 import com.inmobiliaria.inmobiliariabackend.repository.UsuarioRepository;
 import com.inmobiliaria.inmobiliariabackend.repository.UsuarioRolRepository;
+import com.inmobiliaria.inmobiliariabackend.util.TextUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,6 +23,25 @@ public class UsuarioRolService {
     public UsuarioRolService(UsuarioRolRepository repository, UsuarioRepository usuarioRepository) {
         this.usuarioRolRepository = repository;
         this.usuarioRepository = usuarioRepository;
+    }
+
+    public List<UsuarioRol> listar(String busqueda) {
+        List<UsuarioRol> todos = usuarioRolRepository.findAll()
+                .stream()
+                .filter(rol -> rol.getFechaEliminacion() == null)
+                .collect(Collectors.toList());
+
+        if (busqueda == null || busqueda.trim().isEmpty()) return todos;
+
+        String busquedaLimpia = TextUtil.limpiarAcentos(busqueda);
+        String[] palabras = busquedaLimpia.split("\\s+");
+
+        return todos.stream()
+                .filter(r -> {
+                    String contenido = TextUtil.limpiarAcentos(r.getNombre() != null ? r.getNombre() : "");
+                    return Arrays.stream(palabras).allMatch(p -> contenido.contains(p));
+                })
+                .collect(Collectors.toList());
     }
 
     public List<UsuarioRol> listar() {
