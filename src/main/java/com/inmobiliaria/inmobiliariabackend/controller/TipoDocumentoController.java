@@ -27,8 +27,8 @@ public class TipoDocumentoController {
 
     @GetMapping
     @Operation(summary = "Listar tipos de documento", description = "Obtiene todos los tipos de documento activos")
-    public ResponseEntity<List<TipoDocumento>> listar() {
-        return ResponseEntity.ok(tipoDocumentoService.listar());
+    public ResponseEntity<List<TipoDocumento>> listar(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(tipoDocumentoService.listar(search));
     }
 
     @GetMapping("/{id}")
