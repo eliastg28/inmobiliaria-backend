@@ -40,7 +40,7 @@ public class ReporteMensualPdfService {
             document.open();
 
             // Título central
-            Paragraph titulo = new Paragraph("REPORTE MENSUAL - INFORME GERENCIAL", TITLE_FONT);
+            Paragraph titulo = new Paragraph("REPORTE MENSUAL DE VENTAS", TITLE_FONT);
             titulo.setAlignment(Element.ALIGN_CENTER);
             titulo.setSpacingAfter(12f);
             document.add(titulo);
@@ -128,12 +128,12 @@ public class ReporteMensualPdfService {
             document.add(tablaZonas);
 
             // --- Tabla: Ticket promedio por proyecto ---
-            document.add(new Paragraph("Ticket promedio por proyecto", SUBTITLE_FONT));
+            document.add(new Paragraph("Precio promedio por proyecto", SUBTITLE_FONT));
             document.add(Chunk.NEWLINE);
             PdfPTable tablaTicket = new PdfPTable(2);
             tablaTicket.setWidthPercentage(100);
             tablaTicket.setWidths(new int[]{4, 2});
-            addTableHeader(tablaTicket, new String[]{"Proyecto", "Ticket promedio"});
+            addTableHeader(tablaTicket, new String[]{"Proyecto", "Precio promedio"});
             Map<String, Double> tickets = safeMapDouble(data.get("ticket_promedio_proyecto"));
             if (!tickets.isEmpty()) {
                 for (Map.Entry<String, Double> e : tickets.entrySet()) {
