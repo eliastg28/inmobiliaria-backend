@@ -7,7 +7,6 @@ on:
     types:
       - closed
 
-# 🔑 Permiso para que el bot escriba el TAG en tu repositorio
 permissions:
   contents: write
 
@@ -33,10 +32,10 @@ jobs:
           major_pattern: "major:"
           minor_pattern: "feat:"
           patch_pattern: "fix:"
-          format: "${major}.${minor}.${patch}-v${increment}"
+          # 🚀 Formato limpio sin sufijo de incremento
+          format: "${major}.${minor}.${patch}"
           search_commit_body: true
           user_format_if_no_tag: true
-          # 🔥 ESTO ES LO QUE FALTA: Obliga a revisar cada commit individualmente
           bump_each_commit: true
 
       - name: ☕ Configurar JDK 11
@@ -59,7 +58,7 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
           NEW_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          echo "📌 Construyendo versión: $NEW_VERSION"
+          echo "📌 Construyendo versión limpia: $NEW_VERSION"
           docker build -t "$DOCKER_USER/inmobiliaria-backend:$NEW_VERSION" .
           docker tag "$DOCKER_USER/inmobiliaria-backend:$NEW_VERSION" "$DOCKER_USER/inmobiliaria-backend:latest"
           
@@ -71,7 +70,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # Creamos el tag con la versión calculada (ej. 1.1.0-v20)
+          # Intenta crear el tag. Si el tag ya existe (porque no hubo feat/fix), el push fallará avisándote.
           git tag ${{ steps.version.outputs.version }}
           git push origin ${{ steps.version.outputs.version }}
         env:
