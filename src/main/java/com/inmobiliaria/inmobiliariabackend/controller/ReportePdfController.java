@@ -16,7 +16,7 @@ public class ReportePdfController {
     @Autowired
     private ReporteMensualPdfService reporteService;
 
-    private final String IA_URL = "http://ia-service:8000/api/v1/reportes/api/reportes/mensual";
+    private final String IA_URL = System.getenv().getOrDefault("IA_SERVICE_URL", "http://localhost:8000") + "/api/v1/reportes/api/reportes/mensual";
 
     @GetMapping(value = "/mensual/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> generarReportePdf() {
