@@ -8,7 +8,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,6 +21,9 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -32,45 +34,63 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ No declaramos @Bean para JwtFilter porque ahora es un @Component
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
-        return http
-                .cors().and()
-                .csrf().disable()
-                .authorizeRequests()
-                .antMatchers(
-                        "/auth/login",
-                        "/auth/register",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/api-docs/**",
-                        "/swagger-resources/**",
-                        "/webjars/**",
-                        "/api/ia/**",
-                        "/api/reportes/**"
-                ).permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
 
-    @Value("${frontend.url}")
-    private String frontendUrl;
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .authorizeRequests(auth -> auth
+
+                    // ✅ Permitir preflight CORS
+                    .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                    // ✅ Endpoints públicos
+                    .antMatchers(
+                            "/auth/login",
+                            "/auth/register",
+                            "/swagger-ui/**",
+                            "/v3/api-docs/**",
+                            "/api-docs/**",
+                            "/swagger-resources/**",
+                            "/webjars/**",
+                            "/api/ia/**",
+                            "/api/reportes/**"
+                    ).permitAll()
+
+                    // 🔒 Todo lo demás requiere autenticación
+                    .anyRequest().authenticated()
+            )
+            .sessionManagement(session ->
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(frontendUrl));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // 🔥 Usa patrones (más flexible y evita errores con puertos)
+        configuration.setAllowedOriginPatterns(List.of(frontendUrl));
+
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+        ));
+
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }
