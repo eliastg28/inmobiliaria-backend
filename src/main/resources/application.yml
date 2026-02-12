@@ -8,7 +8,7 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: create-drop #create-drop | update
+      ddl-auto: update #create-drop | update
     show-sql: true
     properties:
       hibernate:
@@ -25,8 +25,8 @@ springdoc:
 # Configuración del seed
 app:
   seed:
-    enabled: true   # true para ejecutar el seed, false para no ejecutarlo
-    reset: true    # true para borrar datos antes de insertar
+    enabled: false   # true para ejecutar el seed, false para no ejecutarlo
+    reset: false    # true para borrar datos antes de insertar
 
 frontend:
   url: ${FRONTEND_URL:}
